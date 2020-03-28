@@ -2,9 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/kjuvi/rubus-api/models"
@@ -23,6 +21,7 @@ type UserController struct {
 // @Param	body		body 	models.NewUser	true		"body for user content"
 // @Success 201 {object} models.User
 // @Failure 409 { "message": "conflict" }
+// @Failure 500 { "message": "Internal Server Error" }
 // @router / [post]
 func (u *UserController) Post() {
 	var user models.User
@@ -51,6 +50,7 @@ func (u *UserController) Post() {
 // @Title GetAll
 // @Description get all the rubus `User`
 // @Success 200 {object} []models.User
+// @Failure 500 { "message": "Internal Server Error" }
 // @router / [get]
 func (u *UserController) GetAll() {
 	users, err := models.GetAllUsers()
@@ -71,16 +71,18 @@ func (u *UserController) GetAll() {
 // @Success 200 {object} models.User
 // @Failure 400 { "message": "Bad Request Error" }
 // @Failure 404 { "message": "User does not exists" }
+// @Failure 500 { "message": "Internal Server Error" }
 // @router /:uid [get]
 func (u *UserController) Get() {
 	uid, err := u.GetInt64(":uid")
+
 	if err != nil {
 		u.Data["status"] = http.StatusBadRequest
 		u.Data["msg"] = "Bad Request Error"
 		u.Abort("JSONError")
 	}
 
-	user, err := models.GetUser(uid)
+	user, err := models.GetUser(int64(uid))
 	if err != nil {
 		if err.Error() == "User does not exists" {
 			u.Data["status"] = http.StatusNotFound
@@ -105,7 +107,7 @@ func (u *UserController) Get() {
 // @Failure 400 { "message": "Bad Request Error" }
 // @Failure 404 { "message": "User does not exists" }
 // @Failure 409 { "message": "conflict" }
-// @Failure 409 { "message": "conflict" }
+// @Failure 500 { "message": "Internal Server Error" }
 // @router /:uid [put]
 func (u *UserController) Put() {
 	uid, err := u.GetInt64(":uid")
@@ -147,6 +149,7 @@ func (u *UserController) Put() {
 // @Success 200
 // @Failure 400 { "message": "Bad Request Error" }
 // @Failure 404 { "message": "User does not exists" }
+// @Failure 500 { "message": "Internal Server Error" }
 // @router /:uid [delete]
 func (u *UserController) Delete() {
 	uid, err := u.GetInt64(":uid")
@@ -177,6 +180,7 @@ func (u *UserController) Delete() {
 // @Param	password		query 	string	true		"The password for login"
 // @Success 200 { "token": "string" }
 // @Failure 401 { "message": "Unauthorized" }
+// @Failure 500 { "message": "Internal Server Error" }
 // @router /login [get]
 func (u *UserController) Login() {
 	username := u.GetString("username")
@@ -189,13 +193,10 @@ func (u *UserController) Login() {
 		u.Abort("JSONError")
 	}
 
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["id"] = strconv.FormatInt(*uid, 10)
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-
+	tk := &models.Token{UserID: *uid}
+	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
 	secret := beego.AppConfig.String("jwtsecret")
-	t, err := token.SignedString([]byte(secret)) // TODO: don't hard coded JWT_SECRET
+	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		u.Data["status"] = http.StatusInternalServerError
 		u.Data["msg"] = "Internal Server Error"
@@ -203,6 +204,6 @@ func (u *UserController) Login() {
 	}
 
 	u.Ctx.Output.Status = http.StatusOK
-	u.Data["json"] = map[string]string{"token": t}
+	u.Data["json"] = map[string]string{"token": tokenString}
 	u.ServeJSON()
 }

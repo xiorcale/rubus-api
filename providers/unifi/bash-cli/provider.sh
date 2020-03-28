@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# this script takes ideas from: https://github.com/firizki/wailea
+
 source .env
 
 poe-describe()
@@ -176,8 +178,9 @@ do
         URL=$(echo "$line" | cut -d ' ' -f 2)
         IFS='/' read -ra URL_ARRAY <<< "$URL"
 
+        # logger
         d=$(date)
-        echo "[LOG - ${d}] ${METHOD} ${URL}"
+        echo "[ ${d} ] ${METHOD} ${URL}"
 
         router "${URL_ARRAY[@]:1}" # removes first empty element
 
@@ -187,7 +190,6 @@ do
         fi
 
         RESPONSE=$(to-json $RESPONSE)
-        echo -e $RESPONSE
         echo -e "$(cat header)\n\n$RESPONSE" > response
     fi
     ) 

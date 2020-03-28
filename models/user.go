@@ -13,7 +13,7 @@ import (
 
 // User is the `User` model in the database
 type User struct {
-	ID           int64  `json:"id" orm:"pk,auto"`
+	ID           int64  `json:"id" orm:"pk;auto"`
 	Username     string `json:"username" orm:"unique"`
 	Email        string `json:"email" orm:"unique"`
 	PasswordHash string `json:"-"`
@@ -79,7 +79,7 @@ func GetUser(uid int64) (u *User, err error) {
 	o := orm.NewOrm()
 
 	user := User{ID: uid}
-	if err := o.Read(&user); err != nil {
+	if err = o.Read(&user); err != nil {
 		if err == orm.ErrNoRows {
 			return nil, errors.New("User does not exists")
 		}

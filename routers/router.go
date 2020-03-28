@@ -8,6 +8,7 @@ package routers
 
 import (
 	"github.com/kjuvi/rubus-api/controllers"
+	"github.com/kjuvi/rubus-api/services"
 
 	"github.com/astaxie/beego"
 )
@@ -19,11 +20,15 @@ func init() {
 				&controllers.UserController{},
 			),
 		),
-		beego.NSNamespace("/provider",
+		beego.NSNamespace("/device",
 			beego.NSInclude(
-				&controllers.ProviderController{},
+				&controllers.DeviceController{},
+				&controllers.ProvisionerController{},
 			),
 		),
 	)
 	beego.AddNamespace(ns)
+
+	// authentication middleware
+	beego.InsertFilter("/*", beego.BeforeRouter, services.FilterUser)
 }

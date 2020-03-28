@@ -16,7 +16,7 @@ services:
         working_dir: /go/src/github.com/kjuvi/rubus-api
         depends_on:
             - rubus_db
-            # - rubus_provider
+            - rubus_provider
         command: /go/bin/bee run -downdoc=true -gendoc=true
         networks:
             - rubus_network
