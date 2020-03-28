@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
 	"github.com/kjuvi/rubus-api/models"
 	"github.com/kjuvi/rubus-api/services"
 )
@@ -23,21 +22,14 @@ type DeviceController struct {
 // @Failure 500 { "message": "Internal Server Error" }
 // @router /register [post]
 func (d *DeviceController) RegisterAll() {
-	devices, err := services.GetAllDevices()
-	if err != nil {
-		logs.Debug(err)
-		d.Data["status"] = http.StatusInternalServerError
-		d.Data["msg"] = err.Error()
+	devices, jsonErr := services.GetAllDevices()
+	if jsonErr != nil {
+		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
-	if err := models.AddDeviceMulti(devices); err != nil {
-		if err.Error() == "ID already exists" {
-			d.Data["status"] = http.StatusConflict
-		} else {
-			d.Data["status"] = http.StatusInternalServerError
-		}
-		d.Data["msg"] = err.Error()
+	if jsonErr := models.AddDeviceMulti(devices); jsonErr != nil {
+		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
@@ -57,21 +49,14 @@ func (d *DeviceController) RegisterAll() {
 func (d *DeviceController) Register() {
 	port := d.GetString(":deviceId")
 
-	device, err := services.GetDevice(port)
-	if err != nil {
-		logs.Debug(err)
-		d.Data["status"] = http.StatusInternalServerError
-		d.Data["msg"] = err.Error()
+	device, jsonErr := services.GetDevice(port)
+	if jsonErr != nil {
+		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
-	if err := models.AddDevice(device); err != nil {
-		if err.Error() == "ID already exists" {
-			d.Data["status"] = http.StatusConflict
-		} else {
-			d.Data["status"] = http.StatusInternalServerError
-		}
-		d.Data["msg"] = err.Error()
+	if jsonErr := models.AddDevice(device); jsonErr != nil {
+		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
@@ -87,10 +72,9 @@ func (d *DeviceController) Register() {
 // @Failure 500 { "message": "Internal Server Error" }
 // @router / [get]
 func (d *DeviceController) GetAll() {
-	devices, err := models.GetAllDevices()
-	if err != nil {
-		d.Data["status"] = http.StatusInternalServerError
-		d.Data["msg"] = err.Error()
+	devices, jsonErr := models.GetAllDevices()
+	if jsonErr != nil {
+		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
@@ -110,19 +94,13 @@ func (d *DeviceController) GetAll() {
 func (d *DeviceController) Get() {
 	deviceID, err := d.GetInt64(":deviceId")
 	if err != nil {
-		d.Data["status"] = http.StatusBadRequest
-		d.Data["msg"] = "Bad Request Error"
+		d.Data["error"] = models.NewBadRequestError
 		d.Abort("JSONError")
 	}
 
-	device, err := models.GetDevice(deviceID)
-	if err != nil {
-		if err.Error() == "Device does not exists" {
-			d.Data["status"] = http.StatusNotFound
-		} else {
-			d.Data["status"] = http.StatusInternalServerError
-		}
-		d.Data["msg"] = err.Error()
+	device, jsonErr := models.GetDevice(deviceID)
+	if jsonErr != nil {
+		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
@@ -140,10 +118,8 @@ func (d *DeviceController) Get() {
 func (d *DeviceController) PowerOn() {
 	port := d.GetString(":deviceId")
 
-	if err := services.PowerDeviceOn(port); err != nil {
-		logs.Debug(err)
-		d.Data["status"] = http.StatusInternalServerError
-		d.Data["msg"] = err.Error()
+	if jsonErr := services.PowerDeviceOn(port); jsonErr != nil {
+		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
@@ -163,10 +139,8 @@ func (d *DeviceController) PowerOn() {
 func (d *DeviceController) PowerOff() {
 	port := d.GetString(":deviceId")
 
-	if err := services.PowerDeviceOff(port); err != nil {
-		logs.Debug(err)
-		d.Data["status"] = http.StatusInternalServerError
-		d.Data["msg"] = err.Error()
+	if jsonErr := services.PowerDeviceOff(port); jsonErr != nil {
+		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 

@@ -2,7 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	"errors"
+	"net/http"
 	"regexp"
 	"strings"
 
@@ -31,22 +31,33 @@ func init() {
 }
 
 // Bind transforms the given payload into a `User`, with some validations
-func (u *User) Bind(requestBody []byte) error {
+func (u *User) Bind(requestBody []byte) *JSONError {
 	var newUser NewUser
-	json.Unmarshal(requestBody, &newUser)
+	if err := json.Unmarshal(requestBody, &newUser); err != nil {
+		return NewBadRequestError()
+	}
 
 	// fields validation
 	if len(newUser.Username) == 0 {
-		return errors.New("username is required")
+		return &JSONError{
+			Status: http.StatusBadRequest,
+			Error:  "username is required",
+		}
 	}
 
 	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	if !re.MatchString(newUser.Email) {
-		return errors.New("email address is not valid")
+		return &JSONError{
+			Status: http.StatusBadRequest,
+			Error:  "email address is not valid",
+		}
 	}
 
 	if len(newUser.Password) < 8 {
-		return errors.New("password should be at least 8 characters")
+		return &JSONError{
+			Status: http.StatusBadRequest,
+			Error:  "password should be at least 8 characters",
+		}
 	}
 
 	cost, _ := beego.AppConfig.Int("hashcost")
@@ -61,52 +72,58 @@ func (u *User) Bind(requestBody []byte) error {
 }
 
 // AddUser inserts a new `User` into the database
-func AddUser(u *User) error {
+func AddUser(u *User) *JSONError {
 	o := orm.NewOrm()
 
 	if _, err := o.Insert(u); err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
-			return errors.New("username or email already exists")
+			return &JSONError{
+				Status: http.StatusConflict,
+				Error:  "username or email already exists",
+			}
 		}
-		return errors.New("Internal Server Error")
+		return NewInternalServerError()
 	}
 
 	return nil
 }
 
 // GetUser returns the `User` with the given `uid` from the database
-func GetUser(uid int64) (u *User, err error) {
+func GetUser(uid int64) (*User, *JSONError) {
 	o := orm.NewOrm()
 
 	user := User{ID: uid}
-	if err = o.Read(&user); err != nil {
+	if err := o.Read(&user); err != nil {
 		if err == orm.ErrNoRows {
-			return nil, errors.New("User does not exists")
+			return nil, &JSONError{
+				Status: http.StatusNotFound,
+				Error:  "user does not exists",
+			}
 		}
-		return nil, errors.New("Internal Server Error")
+		return nil, NewInternalServerError()
 	}
 
 	return &user, nil
 }
 
-// GetAllUsers returns all the `User` from the database
-func GetAllUsers() (users []*User, err error) {
+// GetAllUsers returns all the `User`3 from the database
+func GetAllUsers() (users []*User, jsonErr *JSONError) {
 	o := orm.NewOrm()
 
-	if _, err = o.QueryTable("user").All(&users); err != nil {
-		return nil, errors.New("Internal Server Error")
+	if _, err := o.QueryTable("user").All(&users); err != nil {
+		return nil, NewInternalServerError()
 	}
 
 	return users, nil
 }
 
 // UpdateUser modifies the `User` with the given `uid` in the database
-func UpdateUser(uid int64, uu *User) (u *User, err error) {
+func UpdateUser(uid int64, uu *User) (u *User, jsonErr *JSONError) {
 	o := orm.NewOrm()
 
-	u, err = GetUser(uid)
-	if err != nil {
-		return nil, err
+	u, jsonErr = GetUser(uid)
+	if jsonErr != nil {
+		return nil, jsonErr
 	}
 
 	if uu.Username != "" {
@@ -119,27 +136,32 @@ func UpdateUser(uid int64, uu *User) (u *User, err error) {
 		u.PasswordHash = uu.PasswordHash
 	}
 
-	if _, err = o.Update(u); err != nil {
+	if _, err := o.Update(u); err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
-			return nil, errors.New("username or email already exists")
+			jsonErr.Status = http.StatusConflict
+			jsonErr.Error = "username or email already exists"
+			return nil, jsonErr
 		}
-		return nil, errors.New("Internal Server Error")
+		return nil, NewInternalServerError()
 	}
 
 	return u, nil
 }
 
 // DeleteUser removes the given Rubus `User` from the database
-func DeleteUser(uid int64) error {
+func DeleteUser(uid int64) *JSONError {
 	o := orm.NewOrm()
 
 	user := User{ID: uid}
 	uid, err := o.Delete(&user)
 	if uid == 0 {
-		return errors.New("User does not exists")
+		return &JSONError{
+			Status: http.StatusNotFound,
+			Error:  "user does not exists",
+		}
 	}
 	if err != nil {
-		return errors.New("Internal Server Error")
+		return NewInternalServerError()
 	}
 
 	return nil

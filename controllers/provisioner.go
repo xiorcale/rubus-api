@@ -23,27 +23,20 @@ func (p *ProvisionerController) Acquire() {
 	uid := p.Ctx.Request.Context().Value("user").(int64)
 
 	// get the requested `Device`
-	device, err := models.GetDevice(port)
-	if err != nil {
-		if err.Error() == "Device does not exists" {
-			p.Data["status"] = http.StatusNotFound
-		} else {
-			p.Data["status"] = http.StatusInternalServerError
-		}
-		p.Data["msg"] = err.Error()
+	device, jsonErr := models.GetDevice(port)
+	if jsonErr != nil {
+		p.Data["error"] = jsonErr
 		p.Abort("JSONError")
 	}
 
 	// check the `Device` is unowned
 	if device.Owner != nil {
-		p.Data["status"] = http.StatusForbidden
-		p.Data["msg"] = "Forbidden"
+		p.Data["error"] = models.NewForbiddenError()
 		p.Abort("JSONError")
 	}
 
 	if err := models.AcquireDevice(device, uid); err != nil {
-		p.Data["status"] = http.StatusInternalServerError
-		p.Data["msg"] = err.Error()
+		p.Data["error"] = models.NewInternalServerError()
 		p.Abort("JSONError")
 	}
 
@@ -63,26 +56,19 @@ func (p *ProvisionerController) Release() {
 	uid := p.Ctx.Request.Context().Value("user").(int64)
 
 	// get the requested `Device`
-	device, err := models.GetDevice(port)
-	if err != nil {
-		if err.Error() == "Device does not exists" {
-			p.Data["status"] = http.StatusNotFound
-		} else {
-			p.Data["status"] = http.StatusInternalServerError
-		}
-		p.Data["msg"] = err.Error()
+	device, jsonErr := models.GetDevice(port)
+	if jsonErr != nil {
+		p.Data["error"] = jsonErr
 		p.Abort("JSONError")
 	}
 
 	if *device.Owner != uid {
-		p.Data["status"] = http.StatusForbidden
-		p.Data["msg"] = "Forbidden"
+		p.Data["error"] = models.NewForbiddenError()
 		p.Abort("JSONError")
 	}
 
 	if err := models.ReleaseDevice(device); err != nil {
-		p.Data["status"] = http.StatusInternalServerError
-		p.Data["msg"] = err.Error()
+		p.Data["error"] = models.NewInternalServerError()
 		p.Abort("JSONError")
 	}
 

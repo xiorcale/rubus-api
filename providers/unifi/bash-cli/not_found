@@ -2,4 +2,4 @@ HTTP/1.1 404 Not Found
 Server: netcat
 Content-Type: application/json
 
-{ "message": "Not Found" }
+{ "status": 404, "error": "Not Found" }
