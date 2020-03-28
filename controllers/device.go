@@ -22,6 +22,8 @@ type DeviceController struct {
 // @Failure 500 { "message": "Internal Server Error" }
 // @router /register [post]
 func (d *DeviceController) RegisterAll() {
+	services.FilterAdmin(&d.Controller)
+
 	devices, jsonErr := services.GetAllDevices()
 	if jsonErr != nil {
 		d.Data["error"] = jsonErr
@@ -47,6 +49,7 @@ func (d *DeviceController) RegisterAll() {
 // @Failure 500 { "message": "Internal Server Error" }
 // @router /:deviceId/register [post]
 func (d *DeviceController) Register() {
+	services.FilterAdmin(&d.Controller)
 	port := d.GetString(":deviceId")
 
 	device, jsonErr := services.GetDevice(port)
@@ -117,14 +120,23 @@ func (d *DeviceController) Get() {
 // @router /:deviceId/on [post]
 func (d *DeviceController) PowerOn() {
 	port := d.GetString(":deviceId")
+	deviceID, _ := strconv.Atoi(port)
+	device, jsonErr := models.GetDevice(int64(deviceID))
+	if jsonErr != nil {
+		d.Data["error"] = jsonErr
+		d.Abort("JSONError")
+	}
+
+	if device.Owner != nil {
+		services.FilterOwnerOrAdmin(&d.Controller, *device.Owner)
+	}
 
 	if jsonErr := services.PowerDeviceOn(port); jsonErr != nil {
 		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
-	deviceID, _ := strconv.Atoi(port)
-	models.SwitchDevicePower(int64(deviceID))
+	models.SwitchDevicePower(device)
 
 	d.Ctx.Output.Status = http.StatusNoContent
 	d.ServeJSON()
@@ -138,14 +150,23 @@ func (d *DeviceController) PowerOn() {
 // @router /:deviceId/off [post]
 func (d *DeviceController) PowerOff() {
 	port := d.GetString(":deviceId")
+	deviceID, _ := strconv.Atoi(port)
+	device, jsonErr := models.GetDevice(int64(deviceID))
+	if jsonErr != nil {
+		d.Data["error"] = jsonErr
+		d.Abort("JSONError")
+	}
+
+	if device.Owner != nil {
+		services.FilterOwnerOrAdmin(&d.Controller, *device.Owner)
+	}
 
 	if jsonErr := services.PowerDeviceOff(port); jsonErr != nil {
 		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
-	deviceID, _ := strconv.Atoi(port)
-	models.SwitchDevicePower(int64(deviceID))
+	models.SwitchDevicePower(device)
 
 	d.Ctx.Output.Status = http.StatusNoContent
 	d.ServeJSON()

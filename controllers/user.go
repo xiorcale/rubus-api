@@ -5,6 +5,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/kjuvi/rubus-api/models"
+	"github.com/kjuvi/rubus-api/services"
 
 	"github.com/astaxie/beego"
 )
@@ -23,6 +24,8 @@ type UserController struct {
 // @Failure 500 { "message": "Internal Server Error" }
 // @router / [post]
 func (u *UserController) Post() {
+	services.FilterAdmin(&u.Controller)
+
 	var user models.User
 	if jsonErr := user.Bind(u.Ctx.Input.RequestBody); jsonErr != nil {
 		u.Data["error"] = jsonErr
@@ -46,6 +49,7 @@ func (u *UserController) Post() {
 // @Failure 500 { "message": "Internal Server Error" }
 // @router / [get]
 func (u *UserController) GetAll() {
+	services.FilterAdmin(&u.Controller)
 	users, jsonErr := models.GetAllUsers()
 	if jsonErr != nil {
 		u.Data["data"] = jsonErr
@@ -71,6 +75,8 @@ func (u *UserController) Get() {
 		u.Data["error"] = models.NewBadRequestError()
 		u.Abort("JSONError")
 	}
+
+	services.FilterMeOrAdmin(&u.Controller, uid)
 
 	user, jsonErr := models.GetUser(int64(uid))
 	if jsonErr != nil {
@@ -100,6 +106,8 @@ func (u *UserController) Put() {
 		u.Data["error"] = models.NewBadRequestError()
 		u.Abort("JSONError")
 	}
+
+	services.FilterMeOrAdmin(&u.Controller, uid)
 
 	var user models.User
 	if jsonErr := user.Bind(u.Ctx.Input.RequestBody); jsonErr != nil {
@@ -135,6 +143,8 @@ func (u *UserController) Delete() {
 		u.Abort("JSONError")
 	}
 
+	services.FilterMeOrAdmin(&u.Controller, uid)
+
 	if jsonErr := models.DeleteUser(uid); jsonErr != nil {
 		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
@@ -157,14 +167,14 @@ func (u *UserController) Login() {
 	username := u.GetString("username")
 	password := u.GetString("password")
 
-	uid, ok := models.Login(username, password)
+	uid, role, ok := models.Login(username, password)
 	if !ok {
 		u.Data["error"] = models.NewUnauthorizedError()
 		u.Abort("JSONError")
 	}
 
-	tk := &models.Token{UserID: *uid}
-	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
+	claims := &models.Claims{UserID: *uid, Role: *role}
+	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), claims)
 	secret := beego.AppConfig.String("jwtsecret")
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {

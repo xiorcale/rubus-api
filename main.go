@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"github.com/kjuvi/rubus-api/controllers"
+	"github.com/kjuvi/rubus-api/models"
 	_ "github.com/kjuvi/rubus-api/routers"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
@@ -42,6 +44,18 @@ func main() {
 	if err := orm.RunSyncdb(name, force, verbose); err != nil {
 		panic(err)
 	}
+
+	// TODO: change this for prod
+	// insert a default administrator
+	cost, _ := beego.AppConfig.Int("hashcost")
+	bytes, _ := bcrypt.GenerateFromPassword([]byte("rubus_secret"), cost)
+	admin := models.User{
+		Username:     "admin",
+		Email:        "admin@mail.com",
+		PasswordHash: string(bytes),
+		Role:         models.EnumRoleAdmin,
+	}
+	models.AddUser(&admin)
 
 	beego.ErrorController(&controllers.ErrorController{})
 
