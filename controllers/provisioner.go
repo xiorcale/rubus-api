@@ -5,6 +5,7 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/kjuvi/rubus-api/models"
+	"github.com/kjuvi/rubus-api/services"
 )
 
 // Operations about provisioning
@@ -20,7 +21,7 @@ type ProvisionerController struct {
 // @router /:deviceId/acquire [post]
 func (p *ProvisionerController) Acquire() {
 	port, _ := p.GetInt64(":deviceId")
-	uid := p.Ctx.Request.Context().Value("user").(int64)
+	claims := p.Ctx.Request.Context().Value("claims").(*models.Claims)
 
 	// get the requested `Device`
 	device, jsonErr := models.GetDevice(port)
@@ -29,13 +30,11 @@ func (p *ProvisionerController) Acquire() {
 		p.Abort("JSONError")
 	}
 
-	// check the `Device` is unowned
 	if device.Owner != nil {
-		p.Data["error"] = models.NewForbiddenError()
-		p.Abort("JSONError")
+		services.FilterOwnerOrAdmin(&p.Controller, *device.Owner)
 	}
 
-	if err := models.AcquireDevice(device, uid); err != nil {
+	if err := models.AcquireDevice(device, claims.UserID); err != nil {
 		p.Data["error"] = models.NewInternalServerError()
 		p.Abort("JSONError")
 	}
@@ -53,7 +52,6 @@ func (p *ProvisionerController) Acquire() {
 // @router /:deviceId/release [post]
 func (p *ProvisionerController) Release() {
 	port, _ := p.GetInt64(":deviceId")
-	uid := p.Ctx.Request.Context().Value("user").(int64)
 
 	// get the requested `Device`
 	device, jsonErr := models.GetDevice(port)
@@ -62,9 +60,8 @@ func (p *ProvisionerController) Release() {
 		p.Abort("JSONError")
 	}
 
-	if *device.Owner != uid {
-		p.Data["error"] = models.NewForbiddenError()
-		p.Abort("JSONError")
+	if device.Owner != nil {
+		services.FilterOwnerOrAdmin(&p.Controller, *device.Owner)
 	}
 
 	if err := models.ReleaseDevice(device); err != nil {

@@ -2,8 +2,9 @@ package models
 
 import "github.com/dgrijalva/jwt-go"
 
-// Token is the JWT with claims
-type Token struct {
+// Claims is the JWT claims
+type Claims struct {
 	jwt.StandardClaims
 	UserID int64
+	Role   Role
 }

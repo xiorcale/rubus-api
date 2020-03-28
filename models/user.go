@@ -11,11 +11,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Role is an enum which spcify the role of a `User`
+type Role string
+
+// Values for `Role` enum
+const (
+	EnumRoleAdmin Role = "administrator"
+	EnumRoleUser  Role = "user"
+)
+
 // User is the `User` model in the database
 type User struct {
 	ID           int64  `json:"id" orm:"pk;auto"`
 	Username     string `json:"username" orm:"unique"`
 	Email        string `json:"email" orm:"unique"`
+	Role         Role   `json:"role"`
 	PasswordHash string `json:"-"`
 }
 
@@ -24,6 +34,7 @@ type NewUser struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Role     Role   `json:"role"`
 }
 
 func init() {
@@ -60,6 +71,10 @@ func (u *User) Bind(requestBody []byte) *JSONError {
 		}
 	}
 
+	if newUser.Role != EnumRoleAdmin && newUser.Role != EnumRoleUser {
+		newUser.Role = EnumRoleUser
+	}
+
 	cost, _ := beego.AppConfig.Int("hashcost")
 	bytes, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), cost)
 
@@ -67,6 +82,7 @@ func (u *User) Bind(requestBody []byte) *JSONError {
 	u.Username = newUser.Username
 	u.Email = newUser.Email
 	u.PasswordHash = string(bytes)
+	u.Role = newUser.Role
 
 	return nil
 }
@@ -168,20 +184,20 @@ func DeleteUser(uid int64) *JSONError {
 }
 
 // Login checks if the given credentials are valid or not
-func Login(username, password string) (*int64, bool) {
+func Login(username, password string) (*int64, *Role, bool) {
 	o := orm.NewOrm()
 
 	var user User
 	err := o.QueryTable("user").Filter("username", username).One(&user)
 
 	if err == orm.ErrNoRows {
-		return nil, false
+		return nil, nil, false
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return nil, false
+		return nil, nil, false
 	}
 
-	return &user.ID, true
+	return &user.ID, &user.Role, true
 }

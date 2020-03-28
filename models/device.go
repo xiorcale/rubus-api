@@ -85,13 +85,8 @@ func GetAllDevices() ([]*Device, *JSONError) {
 
 // SwitchDevicePower inverse the `isTurnOn` field of the `Device` with the given
 // `deviceID`
-func SwitchDevicePower(deviceID int64) (*Device, *JSONError) {
+func SwitchDevicePower(device *Device) (*Device, *JSONError) {
 	o := orm.NewOrm()
-
-	device, jsonErr := GetDevice(deviceID)
-	if jsonErr != nil {
-		return nil, jsonErr
-	}
 
 	device.IsTurnOn = !device.IsTurnOn
 
