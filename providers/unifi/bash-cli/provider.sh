@@ -97,14 +97,14 @@ router()
         on) # /device/:id/on
             ACTION=""
             if test "$METHOD" == "POST"; then 
-                ACTION="poe-set 0/${DEVICE_ID} auto"
+                ACTION="poe-set 0/${DEVICE_ID} auto; echo this,is,OK"
             fi
             break
             ;;
         off) # /device/:id/off
             ACTION=""
             if test "$METHOD" == "POST"; then
-                ACTION="poe-set 0/${DEVICE_ID} shutdown"
+                ACTION="poe-set 0/${DEVICE_ID} shutdown; echo this,is,OK"
             fi
             break
             ;;
@@ -185,6 +185,11 @@ do
         router "${URL_ARRAY[@]:1}" # removes first empty element
 
         if [[ -z "${ACTION}" ]]; then
+            cat not_found > response
+            break
+        fi
+
+        if [[ -z "${RESPONSE}" ]]; then
             cat not_found > response
             break
         fi

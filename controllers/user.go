@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/kjuvi/rubus-api/models"
@@ -25,19 +24,13 @@ type UserController struct {
 // @router / [post]
 func (u *UserController) Post() {
 	var user models.User
-	if err := user.Bind(u.Ctx.Input.RequestBody); err != nil {
-		u.Data["status"] = http.StatusBadRequest
-		u.Data["msg"] = err.Error()
+	if jsonErr := user.Bind(u.Ctx.Input.RequestBody); jsonErr != nil {
+		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
 	}
 
-	if err := models.AddUser(&user); err != nil {
-		if strings.Contains(err.Error(), "username") {
-			u.Data["status"] = http.StatusConflict
-		} else {
-			u.Data["status"] = http.StatusInternalServerError
-		}
-		u.Data["msg"] = err.Error()
+	if jsonErr := models.AddUser(&user); jsonErr != nil {
+		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
 	}
 
@@ -53,10 +46,9 @@ func (u *UserController) Post() {
 // @Failure 500 { "message": "Internal Server Error" }
 // @router / [get]
 func (u *UserController) GetAll() {
-	users, err := models.GetAllUsers()
-	if err != nil {
-		u.Data["status"] = http.StatusInternalServerError
-		u.Data["msg"] = err.Error()
+	users, jsonErr := models.GetAllUsers()
+	if jsonErr != nil {
+		u.Data["data"] = jsonErr
 		u.Abort("JSONError")
 	}
 
@@ -75,21 +67,14 @@ func (u *UserController) GetAll() {
 // @router /:uid [get]
 func (u *UserController) Get() {
 	uid, err := u.GetInt64(":uid")
-
 	if err != nil {
-		u.Data["status"] = http.StatusBadRequest
-		u.Data["msg"] = "Bad Request Error"
+		u.Data["error"] = models.NewBadRequestError()
 		u.Abort("JSONError")
 	}
 
-	user, err := models.GetUser(int64(uid))
-	if err != nil {
-		if err.Error() == "User does not exists" {
-			u.Data["status"] = http.StatusNotFound
-		} else {
-			u.Data["status"] = http.StatusInternalServerError
-		}
-		u.Data["msg"] = err.Error()
+	user, jsonErr := models.GetUser(int64(uid))
+	if jsonErr != nil {
+		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
 	}
 
@@ -112,28 +97,19 @@ func (u *UserController) Get() {
 func (u *UserController) Put() {
 	uid, err := u.GetInt64(":uid")
 	if err != nil {
-		u.Data["status"] = http.StatusBadRequest
-		u.Data["msg"] = "Bad Request Error"
+		u.Data["error"] = models.NewBadRequestError()
 		u.Abort("JSONError")
 	}
 
 	var user models.User
-	if err := user.Bind(u.Ctx.Input.RequestBody); err != nil {
-		u.Data["status"] = http.StatusBadRequest
-		u.Data["msg"] = err.Error()
+	if jsonErr := user.Bind(u.Ctx.Input.RequestBody); jsonErr != nil {
+		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
 	}
 
-	uu, err := models.UpdateUser(uid, &user)
-	if err != nil {
-		if strings.Contains(err.Error(), "username") {
-			u.Data["status"] = http.StatusConflict
-		} else if err.Error() == "User does not exists" {
-			u.Data["status"] = http.StatusNotFound
-		} else {
-			u.Data["status"] = http.StatusInternalServerError
-		}
-		u.Data["msg"] = err.Error()
+	uu, jsonErr := models.UpdateUser(uid, &user)
+	if jsonErr != nil {
+		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
 	}
 
@@ -159,13 +135,8 @@ func (u *UserController) Delete() {
 		u.Abort("JSONError")
 	}
 
-	if err := models.DeleteUser(uid); err != nil {
-		if err.Error() == "User does not exists" {
-			u.Data["status"] = http.StatusNotFound
-		} else {
-			u.Data["status"] = http.StatusInternalServerError
-		}
-		u.Data["msg"] = err.Error()
+	if jsonErr := models.DeleteUser(uid); jsonErr != nil {
+		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
 	}
 
@@ -188,8 +159,7 @@ func (u *UserController) Login() {
 
 	uid, ok := models.Login(username, password)
 	if !ok {
-		u.Data["status"] = http.StatusUnauthorized
-		u.Data["msg"] = "Unauthorized"
+		u.Data["error"] = models.NewUnauthorizedError()
 		u.Abort("JSONError")
 	}
 
@@ -198,8 +168,7 @@ func (u *UserController) Login() {
 	secret := beego.AppConfig.String("jwtsecret")
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		u.Data["status"] = http.StatusInternalServerError
-		u.Data["msg"] = "Internal Server Error"
+		u.Data["error"] = models.NewInternalServerError
 		u.Abort("JSONError")
 	}
 

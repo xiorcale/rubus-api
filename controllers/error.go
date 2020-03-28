@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/astaxie/beego"
+	"github.com/kjuvi/rubus-api/models"
 )
 
 // ErrorController serves JSON error to the client
@@ -9,15 +12,18 @@ type ErrorController struct {
 	beego.Controller
 }
 
-// jsonError is the struct representing a JSON formatted error
-type jsonError struct {
-	Message string `json:"message"`
-}
-
 // ErrorJSONError serves an error with a JSON message
 func (c *ErrorController) ErrorJSONError() {
-	c.Ctx.Output.Status = c.Data["status"].(int)
-	msg := c.Data["msg"].(string)
-	c.Data["json"] = jsonError{Message: msg}
+	err := c.Data["error"].(*models.JSONError)
+	c.Ctx.Output.Status = err.Status
+	c.Data["json"] = err
+	c.ServeJSON()
+}
+
+// ErrorBadRequest serves a 400 Bad Request Error
+func (c *ErrorController) ErrorBadRequest() {
+	c.Ctx.Output.Status = http.StatusBadRequest
+	err := c.Data["error"].(string)
+	c.Data["json"] = map[string]string{"error": err}
 	c.ServeJSON()
 }

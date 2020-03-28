@@ -8,7 +8,6 @@ import (
 
 	"github.com/astaxie/beego"
 	beegoCtx "github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/logs"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/kjuvi/rubus-api/models"
 )
@@ -32,11 +31,11 @@ var FilterUser = func(ctx *beegoCtx.Context) {
 	if !re.MatchString(authorization) {
 		ctx.Output.Status = http.StatusUnauthorized
 		ctx.Output.JSON(map[string]string{"message": "Unauthorized"}, false, false)
+		return
 	}
 
 	// extract the token string
 	tokenString := strings.Split(authorization, " ")[1]
-	logs.Debug("tokenStr: ", tokenString)
 
 	// parse and validate
 	tk := &models.Token{}
@@ -45,7 +44,6 @@ var FilterUser = func(ctx *beegoCtx.Context) {
 	})
 
 	if err != nil {
-		logs.Debug(err)
 		ctx.Output.Status = http.StatusUnauthorized
 		ctx.Output.JSON(map[string]string{"message": "Unauthorized"}, false, false)
 		return
