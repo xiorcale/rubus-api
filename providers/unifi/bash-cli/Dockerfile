@@ -1,10 +1,10 @@
-FROM alpine:latest
+FROM ubuntu:latest
 
 COPY . /provider
 
 WORKDIR /provider
 
-RUN apk update && apk add --no-cache bash expect netcat-openbsd openssh
+RUN apt-get update && apt-get install -y expect netcat openssh-client
 
 # add the Unifi Network Switch to the known hosts
 RUN mkdir -p /root/.ssh 

@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.3'
 
 networks:
     rubus_network:
@@ -8,12 +8,12 @@ services:
     rubus_api:
         build: .
         restart: always
-        container_name: "rubus_api"
         ports:
             - 8080:8080
         volumes:
-            - .:/go/src/github.com/kjuvi/rubus-api
-        working_dir: /go/src/github.com/kjuvi/rubus-api
+            - .:/go/src/github.com/kjuvi/rubus-api  # mount workspace for development
+            - /tftp:/tftp
+            - /pxe:/pxe
         depends_on:
             - rubus_db
             - rubus_provider
@@ -23,7 +23,6 @@ services:
     
     rubus_db:
         image: postgres:latest
-        container_name: "rubus_db"
         environment:
             POSTGRES_DB: "rubus_db"
             POSTGRES_USER: "rubus_user"
@@ -32,8 +31,7 @@ services:
             - rubus_network
     
     rubus_provider:
-        build: ./providers/unifi/bash-cli
-        container_name: "rubus_provider"
+        build: ./providers/unifi/python-cli
         expose:
             - 1080
         extra_hosts:

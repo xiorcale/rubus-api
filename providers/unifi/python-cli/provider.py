@@ -20,7 +20,7 @@ def get_all_devices():
     with Popen(['./poe.sh', '-c'], stdout=PIPE) as p:
         devices = []
         for line in p.stdout:
-            device_raw = str(line, 'utf-8').split(',')
+            device_raw = str(line, 'utf-8').split(' ')
             device = Device(
                 int(device_raw[0]),
                 True if device_raw[1] == 'Up' else False,
@@ -36,7 +36,7 @@ def get_device(id: int):
     '''Returns a single device information.'''
     with Popen(['./poe.sh', '-c', '-p', str(id)], stdout=PIPE) as p:
         output, _ = p.communicate()
-        device_raw = str(output, 'utf-8').split(',')
+        device_raw = str(output, 'utf-8').split(' ')
 
     device = Device(
         int(device_raw[0]),
@@ -66,4 +66,4 @@ def power_off(id: int):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True, port=5000)
+    app.run(host='0.0.0.0', debug=True, port=1080)

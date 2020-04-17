@@ -6,12 +6,14 @@ import (
 
 	"net/http"
 
+	"github.com/astaxie/beego/logs"
 	"github.com/kjuvi/rubus-api/models"
 )
 
 func request(method, url string, body io.Reader) (*http.Response, *models.JSONError) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
+		logs.Debug("error 1")
 		return nil, models.NewInternalServerError()
 	}
 
@@ -29,6 +31,7 @@ func GetDevice(port string) (*models.Device, *models.JSONError) {
 
 	res, jsonErr := request("GET", url, nil)
 	if jsonErr != nil {
+		logs.Debug("error during request")
 		return nil, jsonErr
 	}
 

@@ -5,7 +5,7 @@
 #author			 :Quentin Vaucher
 #usage		     :bash poe.sh [-j|-c|-u|-d] [-p port]
 #notes           :A .env files which defines the ssh address and credentials 
-#                 needs to be on the root directory.
+#                 needs to be on the root directory (see .env.example).
 #================================================================================
 
 source .env
