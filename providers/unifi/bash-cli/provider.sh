@@ -168,7 +168,7 @@ to-json()
 }
 
 # Main loop
-echo -e "\nRubus Provider started on http://rubus_provider:1080/\n"
+echo -e "\nRubus Provider started on http://localhost:1080/\n"
 
 while true
 do

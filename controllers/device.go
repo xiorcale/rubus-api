@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"net/http"
+	"os/exec"
 	"strconv"
 
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/kjuvi/rubus-api/models"
 	"github.com/kjuvi/rubus-api/services"
 )
@@ -14,50 +16,32 @@ type DeviceController struct {
 	beego.Controller
 }
 
-// RegisterAll adds all `Device` from the provider into the database
-// @Title RegisterAll
-// @Description Registers all the `Device` from the provider into the database
-// @Success 201 {object} []models.Device
-// @Failure 409 { "message": "conflict" }
-// @Failure 500 { "message": "Internal Server Error" }
-// @router /register [post]
-func (d *DeviceController) RegisterAll() {
-	services.FilterAdmin(&d.Controller)
-
-	devices, jsonErr := services.GetAllDevices()
-	if jsonErr != nil {
-		d.Data["error"] = jsonErr
-		d.Abort("JSONError")
-	}
-
-	if jsonErr := models.AddDeviceMulti(devices); jsonErr != nil {
-		d.Data["error"] = jsonErr
-		d.Abort("JSONError")
-	}
-
-	d.Ctx.Output.Status = http.StatusCreated
-	d.Data["json"] = devices
-	d.ServeJSON()
-}
-
-// Register adds a `Device` from the provider into the database
-// @Title Register
-// @Description Registers a `Device` from the provider into the database. Note that on this context, the `deviceId` == device `port`.
-// @Param	deviceId		path 	int	true		"The device id to register"
+// @Title AddDevice
+// @Description Adds a `Device` into the database and prepare the necessary directory structure for deplo1ying it.
+// @Param   hostname        query   string  true        "The hostname of the device"
+// @Param	port			query	string	true		"The device's switch port"
 // @Success 201 {object} models.Device
 // @Failure 409 { "message": "conflict" }
 // @Failure 500 { "message": "Internal Server Error" }
-// @router /:deviceId/register [post]
-func (d *DeviceController) Register() {
+// @router /add [post]
+func (d *DeviceController) AddDevice() {
 	services.FilterAdmin(&d.Controller)
-	port := d.GetString(":deviceId")
 
+	hostname := d.GetString("hostname")
+	port := d.GetString("port")
+
+	// setup the necessary files and folders for the network boot and deployment
+	cmd := exec.Command("./services/add-device.sh", hostname)
+	go cmd.Run()
+
+	// retrieve the device state
 	device, jsonErr := services.GetDevice(port)
 	if jsonErr != nil {
 		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
 	}
 
+	// "cache" the device by inserting it into the database for faster read requests
 	if jsonErr := models.AddDevice(device); jsonErr != nil {
 		d.Data["error"] = jsonErr
 		d.Abort("JSONError")
@@ -65,6 +49,41 @@ func (d *DeviceController) Register() {
 
 	d.Ctx.Output.Status = http.StatusCreated
 	d.Data["json"] = device
+	d.ServeJSON()
+}
+
+// @Title DeleteDevice
+// @Description Deletes a `Device` from the database and remove its directory structure used for deployment.
+// @Param	deviceId		path 	int	true		"The device id to get"
+// @Param   hostname        query   string  true        "The hostname of the device"
+// @Success 204
+// @Failure 409 { "message": "conflict" }
+// @Failure 500 { "message": "Internal Server Error" }
+// @router /:deviceId/delete [post]
+func (d *DeviceController) DeleteDevice() {
+	services.FilterAdmin(&d.Controller)
+	hostname := d.GetString("hostname")
+	deviceID, err := d.GetInt64(":deviceId")
+	if err != nil {
+		d.Data["error"] = models.NewBadRequestError
+		d.Abort("JSONError")
+	}
+
+	// delete the necessary files and folders for the network boot and deployment
+	cmd := exec.Command("./services/delete-device.sh", hostname)
+	if err := cmd.Run(); err != nil {
+		logs.Debug(err)
+		d.Data["error"] = models.NewInternalServerError()
+		d.Abort("JSONError")
+	}
+
+	// TODO: models.RemoveDevice() + return http status no content
+	if jsonErr := models.DeleteDevice(deviceID); err != nil {
+		d.Data["error"] = jsonErr
+		d.Abort("JSONError")
+	}
+
+	d.Ctx.Output.Status = http.StatusOK
 	d.ServeJSON()
 }
 

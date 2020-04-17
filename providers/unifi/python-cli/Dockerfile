@@ -1,10 +1,10 @@
-FROM python:alpine
+FROM python:slim
 
 COPY . /provider
 
 WORKDIR /provider
 
-RUN apk update && apk add --no-cache bash expect openssh
+RUN apt-get update && apt-get install -y expect netcat openssh-client
 
 RUN pip install -r requirements.txt
 

@@ -83,6 +83,25 @@ func GetAllDevices() ([]*Device, *JSONError) {
 	return devices, nil
 }
 
+// DeleteDevice removes the given Rubus `Device` from the database
+func DeleteDevice(uid int64) *JSONError {
+	o := orm.NewOrm()
+
+	device := Device{ID: uid}
+	uid, err := o.Delete(&device)
+	if uid == 0 {
+		return &JSONError{
+			Status: http.StatusNotFound,
+			Error:  "device does not exists",
+		}
+	}
+	if err != nil {
+		return NewInternalServerError()
+	}
+
+	return nil
+}
+
 // SwitchDevicePower inverse the `isTurnOn` field of the `Device` with the given
 // `deviceID`
 func SwitchDevicePower(device *Device) (*Device, *JSONError) {

@@ -17,6 +17,7 @@ func init() {
 	orm.RegisterDriver("postgres", orm.DRPostgres)
 
 	user := beego.AppConfig.String("user")
+
 	password := beego.AppConfig.String("password")
 	host := beego.AppConfig.String("host")
 	dbName := beego.AppConfig.String("dbname")
