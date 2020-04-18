@@ -73,6 +73,7 @@ func GetAllDevices() (*[]models.Device, *models.JSONError) {
 func PowerDeviceOn(port string) *models.JSONError {
 	url := "http://rubus_provider:1080/device/" + port + "/on"
 
+	logs.Debug("URL: %v", url)
 	res, jsonErr := request("POST", url, nil)
 	if jsonErr != nil {
 		return jsonErr

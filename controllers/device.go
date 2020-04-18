@@ -31,7 +31,7 @@ func (d *DeviceController) AddDevice() {
 	port := d.GetString("port")
 
 	// setup the necessary files and folders for the network boot and deployment
-	cmd := exec.Command("./services/add-device.sh", hostname)
+	cmd := exec.Command("./scripts/add-device.sh", hostname)
 	go cmd.Run()
 
 	// retrieve the device state
@@ -70,7 +70,7 @@ func (d *DeviceController) DeleteDevice() {
 	}
 
 	// delete the necessary files and folders for the network boot and deployment
-	cmd := exec.Command("./services/delete-device.sh", hostname)
+	cmd := exec.Command("./scripts/delete-device.sh", hostname)
 	if err := cmd.Run(); err != nil {
 		logs.Debug(err)
 		d.Data["error"] = models.NewInternalServerError()
