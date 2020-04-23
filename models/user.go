@@ -37,6 +37,13 @@ type NewUser struct {
 	Role     Role   `json:"role"`
 }
 
+// PutUser is only use to document the PUT `User` endpoint
+type PutUser struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func init() {
 	orm.RegisterModel(new(User))
 }
@@ -87,6 +94,44 @@ func (u *User) Bind(requestBody []byte) *JSONError {
 	return nil
 }
 
+// BindWithEmptyFields transforms the given payload into a `User`, with
+// some validations, but does not require any field (they should be either nil
+// or valid)
+func (u *User) BindWithEmptyFields(requestBody []byte) *JSONError {
+	var newUser NewUser
+	if err := json.Unmarshal(requestBody, &newUser); err != nil {
+		return NewBadRequestError()
+	}
+
+	if newUser.Username != "" {
+		u.Username = newUser.Username
+	}
+
+	if newUser.Email != "" {
+		re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+		if !re.MatchString(newUser.Email) {
+			return &JSONError{
+				Status: http.StatusBadRequest,
+				Error:  "email address is not valid",
+			}
+		}
+	}
+
+	if newUser.Password != "" {
+		if len(newUser.Password) < 8 {
+			return &JSONError{
+				Status: http.StatusBadRequest,
+				Error:  "password should be at least 8 characters",
+			}
+		}
+		cost, _ := beego.AppConfig.Int("hashcost")
+		bytes, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), cost)
+		u.PasswordHash = string(bytes)
+	}
+
+	return nil
+}
+
 // AddUser inserts a new `User` into the database
 func AddUser(u *User) *JSONError {
 	o := orm.NewOrm()
@@ -133,7 +178,7 @@ func GetAllUsers() (users []*User, jsonErr *JSONError) {
 	return users, nil
 }
 
-// UpdateUser modifies the `User` with the given `uid` in the database
+// UpdateUser modifies the `User` with the given `uid` in the database, with some validations
 func UpdateUser(uid int64, uu *User) (u *User, jsonErr *JSONError) {
 	o := orm.NewOrm()
 

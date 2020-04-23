@@ -62,23 +62,16 @@ func (u *UserController) GetAll() {
 
 // Get a `User`
 // @Title Get
-// @Description Get the Rubus `User` with the given `uid`
-// @Param	uid		path 	int	true		"The user id to get"
+// @Description Get the authenticated Rubus `User`
 // @Success 200 {object} models.User
 // @Failure 400 { "message": "Bad Request Error" }
 // @Failure 404 { "message": "User does not exists" }
 // @Failure 500 { "message": "Internal Server Error" }
-// @router /:uid [get]
+// @router /me [get]
 func (u *UserController) Get() {
-	uid, err := u.GetInt64(":uid")
-	if err != nil {
-		u.Data["error"] = models.NewBadRequestError()
-		u.Abort("JSONError")
-	}
+	claims := u.Ctx.Request.Context().Value("claims").(*models.Claims)
 
-	services.FilterMeOrAdmin(&u.Controller, uid)
-
-	user, jsonErr := models.GetUser(int64(uid))
+	user, jsonErr := models.GetUser(claims.UserID)
 	if jsonErr != nil {
 		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
@@ -92,30 +85,23 @@ func (u *UserController) Get() {
 // Put updates a user
 // @Title Update
 // @Description Update the Rubus `User` with the given `uid`
-// @Param	uid		path 	int 	true		"The user id to update"
-// @Param	body		body 	models.NewUser	true		"body for user content"
+// @Param	body		body 	models.PutUser	true		"body for user content"
 // @Success 200 {object} models.User
 // @Failure 400 { "message": "Bad Request Error" }
 // @Failure 404 { "message": "User does not exists" }
 // @Failure 409 { "message": "conflict" }
 // @Failure 500 { "message": "Internal Server Error" }
-// @router /:uid [put]
+// @router /me [put]
 func (u *UserController) Put() {
-	uid, err := u.GetInt64(":uid")
-	if err != nil {
-		u.Data["error"] = models.NewBadRequestError()
-		u.Abort("JSONError")
-	}
-
-	services.FilterMeOrAdmin(&u.Controller, uid)
+	claims := u.Ctx.Request.Context().Value("claims").(*models.Claims)
 
 	var user models.User
-	if jsonErr := user.Bind(u.Ctx.Input.RequestBody); jsonErr != nil {
+	if jsonErr := user.BindWithEmptyFields(u.Ctx.Input.RequestBody); jsonErr != nil {
 		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
 	}
 
-	uu, jsonErr := models.UpdateUser(uid, &user)
+	uu, jsonErr := models.UpdateUser(claims.UserID, &user)
 	if jsonErr != nil {
 		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
@@ -129,23 +115,15 @@ func (u *UserController) Put() {
 // Delete removes a `User`
 // @Title Delete
 // @Description delete the Rubus `User` with the given `uid`
-// @Param	uid		path 	string	true		"The user id to delete"
 // @Success 200
 // @Failure 400 { "message": "Bad Request Error" }
 // @Failure 404 { "message": "User does not exists" }
 // @Failure 500 { "message": "Internal Server Error" }
-// @router /:uid [delete]
+// @router /me [delete]
 func (u *UserController) Delete() {
-	uid, err := u.GetInt64(":uid")
-	if err != nil {
-		u.Data["status"] = http.StatusBadRequest
-		u.Data["msg"] = "Bad Request Error"
-		u.Abort("JSONError")
-	}
+	claims := u.Ctx.Request.Context().Value("claims").(*models.Claims)
 
-	services.FilterMeOrAdmin(&u.Controller, uid)
-
-	if jsonErr := models.DeleteUser(uid); jsonErr != nil {
+	if jsonErr := models.DeleteUser(claims.UserID); jsonErr != nil {
 		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
 	}

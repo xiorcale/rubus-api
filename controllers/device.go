@@ -155,7 +155,9 @@ func (d *DeviceController) PowerOn() {
 		d.Abort("JSONError")
 	}
 
-	models.SwitchDevicePower(device)
+	if !device.IsTurnOn {
+		models.SwitchDevicePower(device)
+	}
 
 	d.Ctx.Output.Status = http.StatusNoContent
 	d.ServeJSON()
@@ -185,7 +187,9 @@ func (d *DeviceController) PowerOff() {
 		d.Abort("JSONError")
 	}
 
-	models.SwitchDevicePower(device)
+	if device.IsTurnOn {
+		models.SwitchDevicePower(device)
+	}
 
 	d.Ctx.Output.Status = http.StatusNoContent
 	d.ServeJSON()
