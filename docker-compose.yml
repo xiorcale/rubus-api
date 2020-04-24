@@ -10,8 +10,9 @@ services:
         restart: always
         ports:
             - 8080:8080
+        privileged: true # needed to mount the overlay (can we do better?)
         volumes:
-            - .:/go/src/github.com/kjuvi/rubus-api  # mount workspace for development
+            - .:/go/src/github.com/kjuvi/rubus-api  # workspace is needed for development only
             - /tftp:/tftp
             - /pxe:/pxe
         depends_on:

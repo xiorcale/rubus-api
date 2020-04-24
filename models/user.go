@@ -115,6 +115,7 @@ func (u *User) BindWithEmptyFields(requestBody []byte) *JSONError {
 				Error:  "email address is not valid",
 			}
 		}
+		u.Email = newUser.Email
 	}
 
 	if newUser.Password != "" {
