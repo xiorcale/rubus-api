@@ -80,7 +80,7 @@ func (p *ProvisionerController) Release() {
 // @Title Deploy
 // @Description mounts the PXE boot folder into the tftp folder and reboot the `Device`
 // @Param	deviceId		path	int	true		"The device port to release"
-// @Success	201
+// @Success	204
 // @router /:deviceId/deploy [post]
 func (p *ProvisionerController) Deploy() {
 	port, _ := p.GetInt64(":deviceId")

@@ -1,11 +1,19 @@
 #!/bin/bash
 
-HOSTNAME=$1
+set -e 
 
-# remove the tftp folder used to boot the device
-umount /tftp/$HOSTNAME
-rm -r /tftp/$HOSTNAME
+delet_device()
+{
+    HOSTNAME=$1
 
-# remove the nfs share
-rm -r /pxe/nfs/$HOSTNAME
-sed -i /$HOSTNAME/d /etc/exports
+    # remove the tftp folder used to boot the device
+    umount /tftp/$HOSTNAME
+    rm -r /tftp/$HOSTNAME
+
+    # unmount the overlay file system and remove it
+    umount /pxe/nfs/$HOSTNAME
+    rm -r /pxe/nfs/$HOSTNAME
+    sed -i /$HOSTNAME/d /etc/exports
+}
+
+delet_device $1
