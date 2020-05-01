@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e 
-
 delet_device()
 {
     HOSTNAME=$1
@@ -12,7 +10,7 @@ delet_device()
 
     # unmount the overlay file system and remove it
     umount /pxe/nfs/$HOSTNAME
-    rm -r /pxe/nfs/$HOSTNAME
+    rm -r /pxe/nfs/$HOSTNAME*
     sed -i /$HOSTNAME/d /etc/exports
 }
 

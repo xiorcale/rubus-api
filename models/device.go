@@ -27,7 +27,7 @@ func AddDevice(d *Device) *JSONError {
 		if strings.Contains(err.Error(), "duplicate key") {
 			return &JSONError{
 				Status: http.StatusConflict,
-				Error:  "id already exists",
+				Error:  "id already exists.",
 			}
 		}
 		return NewInternalServerError()
@@ -44,7 +44,7 @@ func AddDeviceMulti(devices *[]Device) *JSONError {
 		if strings.Contains(err.Error(), "duplicate key") {
 			return &JSONError{
 				Status: http.StatusConflict,
-				Error:  "id already exists",
+				Error:  "id already exists.",
 			}
 		}
 		return NewInternalServerError()
@@ -62,7 +62,7 @@ func GetDevice(deviceID int64) (*Device, *JSONError) {
 		if err == orm.ErrNoRows {
 			return nil, &JSONError{
 				Status: http.StatusNotFound,
-				Error:  "Device does not exists",
+				Error:  "Device does not exist.",
 			}
 		}
 		return nil, NewInternalServerError()
@@ -92,7 +92,7 @@ func DeleteDevice(uid int64) *JSONError {
 	if uid == 0 {
 		return &JSONError{
 			Status: http.StatusNotFound,
-			Error:  "device does not exists",
+			Error:  "device does not exist.",
 		}
 	}
 	if err != nil {

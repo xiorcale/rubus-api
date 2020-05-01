@@ -28,7 +28,7 @@ func NewUnauthorizedError() *JSONError {
 func NewForbiddenError() *JSONError {
 	return &JSONError{
 		Status: http.StatusForbidden,
-		Error:  "Unauthorized",
+		Error:  "Forbidden",
 	}
 }
 

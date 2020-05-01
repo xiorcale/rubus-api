@@ -8,6 +8,7 @@ import (
 	"github.com/kjuvi/rubus-api/services"
 
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 )
 
 // Operations about Users
@@ -45,6 +46,7 @@ func (u *UserController) GetMe() {
 	user, jsonErr := models.GetUser(claims.UserID)
 	if jsonErr != nil {
 		u.Data["error"] = jsonErr
+		logs.Debug("JSON ERROR: ", jsonErr)
 		u.Abort("JSONError")
 	}
 

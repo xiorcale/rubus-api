@@ -59,7 +59,7 @@ func (u *User) Bind(requestBody []byte) *JSONError {
 	if len(newUser.Username) == 0 {
 		return &JSONError{
 			Status: http.StatusBadRequest,
-			Error:  "username is required",
+			Error:  "username is required.",
 		}
 	}
 
@@ -67,14 +67,14 @@ func (u *User) Bind(requestBody []byte) *JSONError {
 	if !re.MatchString(newUser.Email) {
 		return &JSONError{
 			Status: http.StatusBadRequest,
-			Error:  "email address is not valid",
+			Error:  "email address is not valid.",
 		}
 	}
 
 	if len(newUser.Password) < 8 {
 		return &JSONError{
 			Status: http.StatusBadRequest,
-			Error:  "password should be at least 8 characters",
+			Error:  "password should be at least 8 characters.",
 		}
 	}
 
@@ -112,7 +112,7 @@ func (u *User) BindWithEmptyFields(requestBody []byte) *JSONError {
 		if !re.MatchString(newUser.Email) {
 			return &JSONError{
 				Status: http.StatusBadRequest,
-				Error:  "email address is not valid",
+				Error:  "email address is not valid.",
 			}
 		}
 		u.Email = newUser.Email
@@ -122,7 +122,7 @@ func (u *User) BindWithEmptyFields(requestBody []byte) *JSONError {
 		if len(newUser.Password) < 8 {
 			return &JSONError{
 				Status: http.StatusBadRequest,
-				Error:  "password should be at least 8 characters",
+				Error:  "password should be at least 8 characters.",
 			}
 		}
 		cost, _ := beego.AppConfig.Int("hashcost")
@@ -141,7 +141,7 @@ func AddUser(u *User) *JSONError {
 		if strings.Contains(err.Error(), "duplicate key") {
 			return &JSONError{
 				Status: http.StatusConflict,
-				Error:  "username or email already exists",
+				Error:  "username and/or email already exist(s).",
 			}
 		}
 		return NewInternalServerError()
@@ -159,7 +159,7 @@ func GetUser(uid int64) (*User, *JSONError) {
 		if err == orm.ErrNoRows {
 			return nil, &JSONError{
 				Status: http.StatusNotFound,
-				Error:  "user does not exists",
+				Error:  "user does not exist.",
 			}
 		}
 		return nil, NewInternalServerError()
@@ -200,9 +200,14 @@ func UpdateUser(uid int64, uu *User) (u *User, jsonErr *JSONError) {
 
 	if _, err := o.Update(u); err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
-			jsonErr.Status = http.StatusConflict
-			jsonErr.Error = "username or email already exists"
-			return nil, jsonErr
+			return nil, &JSONError{
+				Status: http.StatusConflict,
+				Error:  "username and/or email already exist(s).",
+			}
+			//jsonErr.Status = http.StatusConflict
+			//jsonErr.Error = "username or email already exists"
+			//logs.Debug("json error: ", *jsonErr)
+			//return nil, jsonErr
 		}
 		return nil, NewInternalServerError()
 	}
@@ -219,7 +224,7 @@ func DeleteUser(uid int64) *JSONError {
 	if uid == 0 {
 		return &JSONError{
 			Status: http.StatusNotFound,
-			Error:  "user does not exists",
+			Error:  "user does not exist.",
 		}
 	}
 	if err != nil {

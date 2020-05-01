@@ -76,3 +76,36 @@ func (a *AdminController) CreateDevice() {
 	a.Data["json"] = device
 	a.ServeJSON()
 }
+
+// @Title DeleteDevice
+// @Description Delete a `Device` from the database and remove its directory structure used for deployment.
+// @Param hostname query string true "The hostname of the device"
+// @Param deviceId query int64 true "The device's switch port"
+// @Success 204
+// @Failure 400 { "message": "Bad Request Error" }
+// @Failure 404 { "message": "Not Found" }
+// @Failure 500 { "message": "Internal Server Error" }
+// @router /device [delete]
+func (a *AdminController) DeleteDevice() {
+	services.FilterAdmin(&a.Controller)
+
+	hostname := a.GetString("hostname")
+	deviceID, err := a.GetInt64("deviceId")
+	if err != nil {
+		a.Data["error"] = models.NewBadRequestError
+		a.Abort("JSONError")
+	}
+
+	// delete the necessary files and folders
+	// for the network boot and deployment
+	cmd := exec.Command("./scripts/delete-device.sh", hostname)
+	cmd.Run()
+
+	if jsonErr := models.DeleteDevice(deviceID); err != nil {
+		a.Data["error"] = jsonErr
+		a.Abort("JSONError")
+	}
+
+	a.Ctx.Output.Status = http.StatusNoContent
+	a.ServeJSON()
+}

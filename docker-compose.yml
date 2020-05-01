@@ -15,6 +15,7 @@ services:
             - .:/go/src/github.com/kjuvi/rubus-api  # workspace is needed for development only
             - /tftp:/tftp
             - /pxe:/pxe
+            - /etc/exports:/etc/exports
         depends_on:
             - rubus_db
             - rubus_provider
