@@ -15,40 +15,12 @@ type UserController struct {
 	beego.Controller
 }
 
-// Post creates a new `User`
-// @Title CreateUser
-// @Description Creates a new Rubus `User` and save it into the database
-// @Param	body		body 	models.NewUser	true		"body for user content"
-// @Success 201 {object} models.User
-// @Failure 409 { "message": "conflict" }
-// @Failure 500 { "message": "Internal Server Error" }
-// @router / [post]
-func (u *UserController) Post() {
-	services.FilterAdmin(&u.Controller)
-
-	var user models.User
-	if jsonErr := user.Bind(u.Ctx.Input.RequestBody); jsonErr != nil {
-		u.Data["error"] = jsonErr
-		u.Abort("JSONError")
-	}
-
-	if jsonErr := models.AddUser(&user); jsonErr != nil {
-		u.Data["error"] = jsonErr
-		u.Abort("JSONError")
-	}
-
-	u.Ctx.Output.Status = http.StatusCreated
-	u.Data["json"] = user
-	u.ServeJSON()
-}
-
-// GetAll returns all the Rubus `User`
-// @Title GetAll
-// @Description get all the rubus `User`
+// @Title ListUser
+// @Description List all the `User`.
 // @Success 200 {object} []models.User
 // @Failure 500 { "message": "Internal Server Error" }
 // @router / [get]
-func (u *UserController) GetAll() {
+func (u *UserController) ListUser() {
 	services.FilterAdmin(&u.Controller)
 	users, jsonErr := models.GetAllUsers()
 	if jsonErr != nil {
@@ -60,15 +32,14 @@ func (u *UserController) GetAll() {
 	u.ServeJSON()
 }
 
-// Get a `User`
-// @Title Get
-// @Description Get the authenticated Rubus `User`
+// @Title GetMe
+// @Description Return the `User` who made the request.
 // @Success 200 {object} models.User
 // @Failure 400 { "message": "Bad Request Error" }
 // @Failure 404 { "message": "User does not exists" }
 // @Failure 500 { "message": "Internal Server Error" }
 // @router /me [get]
-func (u *UserController) Get() {
+func (u *UserController) GetMe() {
 	claims := u.Ctx.Request.Context().Value("claims").(*models.Claims)
 
 	user, jsonErr := models.GetUser(claims.UserID)
@@ -82,21 +53,21 @@ func (u *UserController) Get() {
 	u.ServeJSON()
 }
 
-// Put updates a user
-// @Title Update
-// @Description Update the Rubus `User` with the given `uid`
-// @Param	body		body 	models.PutUser	true		"body for user content"
+// @Title UpdateMe
+// @Description Update the `User` who made the request.
+// @Param body body models.PutUser true "the `User` fields which can be updated. Giving all the fields is not mendatory, but at least one of them is required."
 // @Success 200 {object} models.User
 // @Failure 400 { "message": "Bad Request Error" }
 // @Failure 404 { "message": "User does not exists" }
 // @Failure 409 { "message": "conflict" }
 // @Failure 500 { "message": "Internal Server Error" }
 // @router /me [put]
-func (u *UserController) Put() {
+func (u *UserController) UpdateMe() {
 	claims := u.Ctx.Request.Context().Value("claims").(*models.Claims)
 
 	var user models.User
-	if jsonErr := user.BindWithEmptyFields(u.Ctx.Input.RequestBody); jsonErr != nil {
+	jsonErr := user.BindWithEmptyFields(u.Ctx.Input.RequestBody)
+	if jsonErr != nil {
 		u.Data["error"] = jsonErr
 		u.Abort("JSONError")
 	}
@@ -112,15 +83,14 @@ func (u *UserController) Put() {
 	u.ServeJSON()
 }
 
-// Delete removes a `User`
-// @Title Delete
-// @Description delete the Rubus `User` with the given `uid`
+// @Title DeleteMe
+// @Description Delete the `User` who made the request.
 // @Success 200
 // @Failure 400 { "message": "Bad Request Error" }
 // @Failure 404 { "message": "User does not exists" }
 // @Failure 500 { "message": "Internal Server Error" }
 // @router /me [delete]
-func (u *UserController) Delete() {
+func (u *UserController) DeleteMe() {
 	claims := u.Ctx.Request.Context().Value("claims").(*models.Claims)
 
 	if jsonErr := models.DeleteUser(claims.UserID); jsonErr != nil {
@@ -132,11 +102,10 @@ func (u *UserController) Delete() {
 	u.ServeJSON()
 }
 
-// Login logs a `User` into the system
 // @Title Login
-// @Description Logs user into the system
-// @Param	username		query 	string	true		"The username for login"
-// @Param	password		query 	string	true		"The password for login"
+// @Description Log a `User` into the system.
+// @Param username query string true "The username used to login"
+// @Param password query string true "The password used to login"
 // @Success 200 { "token": "string" }
 // @Failure 401 { "message": "Unauthorized" }
 // @Failure 500 { "message": "Internal Server Error" }

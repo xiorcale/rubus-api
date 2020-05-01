@@ -78,7 +78,7 @@ func (u *User) Bind(requestBody []byte) *JSONError {
 		}
 	}
 
-	if newUser.Role != EnumRoleAdmin && newUser.Role != EnumRoleUser {
+	if newUser.Role != EnumRoleAdmin {
 		newUser.Role = EnumRoleUser
 	}
 
@@ -168,7 +168,7 @@ func GetUser(uid int64) (*User, *JSONError) {
 	return &user, nil
 }
 
-// GetAllUsers returns all the `User`3 from the database
+// GetAllUsers returns all the `User` from the database
 func GetAllUsers() (users []*User, jsonErr *JSONError) {
 	o := orm.NewOrm()
 
