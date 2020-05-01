@@ -2,8 +2,8 @@
 // @Title Rubus API
 // @Description Rubus API exposes provisioning services to manage an edge cluster system (i.e. Raspberry pi). This API takes advantage of various HTTP features like authentication, verbs or status code. All requests and response bodies are JSON encoded, including error responses.
 // @Contact quentin.vaucher@master.hes-so.ch
-// @License Apache 2.0
-// @LicenseUrl http://www.apache.org/licenses/LICENSE-2.0.html
+// @License MIT
+// @LicenseUrl https://opensource.org/licenses/MIT
 package routers
 
 import (
@@ -15,6 +15,11 @@ import (
 
 func init() {
 	ns := beego.NewNamespace("/v1",
+		beego.NSNamespace("/admin",
+			beego.NSInclude(
+				&controllers.AdminController{},
+			),
+		),
 		beego.NSNamespace("/user",
 			beego.NSInclude(
 				&controllers.UserController{},

@@ -10,15 +10,14 @@ import (
 	"github.com/kjuvi/rubus-api/services"
 )
 
-// Operations about provisioning
+// Operations about devices, such as provisioning or deployment
 type ProvisionerController struct {
 	beego.Controller
 }
 
-// Acquire sets the request `User` as the owner of the `Device`
 // @Title Acquire
-// @Description sets the request `User` as the owner of the `Device`
-// @Param	deviceId		path 	int	true		"The device port to acquire"
+// @Description Set the `User` who made the request as the owner of the `Device`.
+// @Param deviceId path int true "The id of the `Device` to acquire"
 // @Success 200 {object} models.Device
 // @router /:deviceId/acquire [post]
 func (p *ProvisionerController) Acquire() {
@@ -46,9 +45,8 @@ func (p *ProvisionerController) Acquire() {
 	p.ServeJSON()
 }
 
-// Release removes the request `User` as the owner of the `Device`
 // @Title Release
-// @Description removes the request `User` as the owner of the `Device`
+// @Description Remove the `Device`'s ownership from the `User` who made the request.
 // @Param	deviceId		path 	int	true		"The device port to release"
 // @Success 200 {object} models.Device
 // @router /:deviceId/release [post]
@@ -76,10 +74,9 @@ func (p *ProvisionerController) Release() {
 	p.ServeJSON()
 }
 
-// Deploy mounts the PXE boot folder into the tftp folder and reboot the `Device`
 // @Title Deploy
-// @Description mounts the PXE boot folder into the tftp folder and reboot the `Device`
-// @Param	deviceId		path	int	true		"The device port to release"
+// @Description Configure the PXE boot for the `Device` and reboot it.
+// @Param deviceId path int true "The device id to deploy"
 // @Success	204
 // @router /:deviceId/deploy [post]
 func (p *ProvisionerController) Deploy() {
@@ -101,14 +98,16 @@ func (p *ProvisionerController) Deploy() {
 	go cmd.Run()
 
 	if device.IsTurnOn {
-		if jsonErr := services.PowerDeviceOff(strconv.FormatInt(port, 10)); jsonErr != nil {
+		jsonErr := services.PowerDeviceOff(strconv.FormatInt(port, 10))
+		if jsonErr != nil {
 			p.Data["error"] = jsonErr
 			p.Abort("JSONError")
 		}
 		models.SwitchDevicePower(device)
 	}
 
-	if jsonErr := services.PowerDeviceOn(strconv.FormatInt(port, 10)); jsonErr != nil {
+	jsonErr = services.PowerDeviceOn(strconv.FormatInt(port, 10))
+	if jsonErr != nil {
 		p.Data["error"] = jsonErr
 		p.Abort("JSONError")
 	}
