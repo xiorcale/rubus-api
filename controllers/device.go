@@ -2,11 +2,9 @@ package controllers
 
 import (
 	"net/http"
-	"os/exec"
 	"strconv"
 
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
 	"github.com/kjuvi/rubus-api/models"
 	"github.com/kjuvi/rubus-api/services"
 )
@@ -14,42 +12,6 @@ import (
 // Operations about devices such as provisioning or deployment
 type DeviceController struct {
 	beego.Controller
-}
-
-// @Title DeleteDevice
-// @Description Delete a `Device` from the database and remove its directory structure used for deployment.
-// @Param deviceId path int true "The `id` of the `Device` to delete"
-// @Param hostname query string true "The hostname of the device"
-// @Success 204
-// @Failure 409 { "message": "conflict" }
-// @Failure 500 { "message": "Internal Server Error" }
-// @router /:deviceId/delete [post]
-func (d *DeviceController) DeleteDevice() {
-	services.FilterAdmin(&d.Controller)
-	hostname := d.GetString("hostname")
-	deviceID, err := d.GetInt64(":deviceId")
-	if err != nil {
-		d.Data["error"] = models.NewBadRequestError
-		d.Abort("JSONError")
-	}
-
-	// delete the necessary files and folders
-	// for the network boot and deployment
-	cmd := exec.Command("./scripts/delete-device.sh", hostname)
-	if err := cmd.Run(); err != nil {
-		logs.Debug(err)
-		d.Data["error"] = models.NewInternalServerError()
-		d.Abort("JSONError")
-	}
-
-	// TODO: models.RemoveDevice() + return http status no content
-	if jsonErr := models.DeleteDevice(deviceID); err != nil {
-		d.Data["error"] = jsonErr
-		d.Abort("JSONError")
-	}
-
-	d.Ctx.Output.Status = http.StatusOK
-	d.ServeJSON()
 }
 
 // @Title ListDevice

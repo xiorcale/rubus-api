@@ -19,12 +19,10 @@ setup_new_device()
 
     # configure the NFS share by passing a command to the kernel
     echo "console=serial0,115200 console=tty1 root=/dev/nfs \
-    nfsroot=172.29.0.100:/pxe/nfs/$HOSTNAME,vers=3 rw ip=dhcp rootwait elevator=deadline" \
-    > /pxe/nfs/$HOSTNAME/boot/disabled/cmdline.txt
+    nfsroot=172.29.0.100:/pxe/nfs/$HOSTNAME,vers=3 rw ip=dhcp rootwait elevator=deadline" > /pxe/nfs/$HOSTNAME/boot/disabled/cmdline.txt
 
     # configure the NFS share on the server
-    echo "/pxe/nfs/$HOSTNAME *(rw,sync,no_subtree_check,no_root_squash)" \
-    >> /etc/exports
+    echo "/pxe/nfs/$HOSTNAME *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
 
     # mount the overlay file system
     mkdir /pxe/nfs/$HOSTNAME-work
