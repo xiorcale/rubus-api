@@ -6,14 +6,12 @@ import (
 
 	"net/http"
 
-	"github.com/astaxie/beego/logs"
-	"github.com/kjuvi/rubus-api/models"
+	"github.com/xiorcale/rubus-api/models"
 )
 
 func request(method, url string, body io.Reader) (*http.Response, *models.JSONError) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		logs.Debug("error 1")
 		return nil, models.NewInternalServerError()
 	}
 
@@ -31,7 +29,6 @@ func GetDevice(port string) (*models.Device, *models.JSONError) {
 
 	res, jsonErr := request("GET", url, nil)
 	if jsonErr != nil {
-		logs.Debug("error during request")
 		return nil, jsonErr
 	}
 
@@ -73,7 +70,6 @@ func GetAllDevices() (*[]models.Device, *models.JSONError) {
 func PowerDeviceOn(port string) *models.JSONError {
 	url := "http://rubus_provider:1080/device/" + port + "/on"
 
-	logs.Debug("URL: %v", url)
 	res, jsonErr := request("POST", url, nil)
 	if jsonErr != nil {
 		return jsonErr

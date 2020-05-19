@@ -1,12 +1,12 @@
-module github.com/kjuvi/rubus-api
+module github.com/xiorcale/rubus-api
 
 go 1.14
 
 require (
-	github.com/astaxie/beego v1.12.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/lib/pq v1.3.0
-	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644 // indirect
-	github.com/smartystreets/goconvey v1.6.4
-	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
+	github.com/go-pg/pg/v9 v9.1.6
+	github.com/labstack/echo/v4 v4.1.16
+	github.com/swaggo/echo-swagger v1.0.0
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	gopkg.in/ini.v1 v1.56.0
 )
