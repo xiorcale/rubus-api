@@ -12,14 +12,14 @@ services:
             - 8080:8080
         privileged: true # needed to mount the overlay (can we do better?)
         volumes:
-            - .:/go/src/github.com/kjuvi/rubus-api  # workspace is needed for development only
+            - .:/go/src/github.com/xiorcale/rubus-api  # workspace is needed for development only
             - /tftp:/tftp
             - /pxe:/pxe
             - /etc/exports:/etc/exports
         depends_on:
             - rubus_db
             - rubus_provider
-        command: /go/bin/bee run -downdoc=true -gendoc=true
+        command: go run .
         networks:
             - rubus_network
     

@@ -1,0 +1,558 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Rubus REST API",
+        "title": "Rubus API",
+        "contact": {
+            "name": "Quentin Vaucher",
+            "email": "quentin.vaucher3@master.hes-so.ch"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:1323",
+    "paths": {
+        "/": {
+            "get": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Return a list containing all the `User`",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "List all the users",
+                "operationId": "listUser",
+                "responses": {
+                    "200": {
+                        "description": "A JSON array listing all the users",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.User"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/:deviceId": {
+            "get": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Return the `Device` with the given `deviceId`.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device"
+                ],
+                "summary": "get a device by id",
+                "operationId": "getDevice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The id of the `Device` to get",
+                        "name": "deviceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Device"
+                        }
+                    }
+                }
+            }
+        },
+        "/:deviceId/acquire": {
+            "post": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Set the `User` who made the request as the owner of the `Device`.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device"
+                ],
+                "summary": "acquire a device",
+                "operationId": "acquire",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The id of the `Device` to acquire",
+                        "name": "deviceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Device"
+                        }
+                    }
+                }
+            }
+        },
+        "/:deviceId/deploy": {
+            "post": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Configure the PXE boot for the `Device` and reboot it.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device"
+                ],
+                "summary": "deploy a device",
+                "operationId": "deploy",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The device id to deploy",
+                        "name": "deviceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {}
+                }
+            }
+        },
+        "/:deviceId/off": {
+            "post": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Shuts down the `Device` on the given `port`",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device"
+                ],
+                "summary": "Shut down a device",
+                "operationId": "powerOff",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The device id to turn off",
+                        "name": "deviceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {}
+                }
+            }
+        },
+        "/:deviceId/on": {
+            "post": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Boot the `Device` with the given `deviceId`.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device"
+                ],
+                "summary": "Boot a device",
+                "operationId": "powerOn",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The device id to turn on",
+                        "name": "deviceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {}
+                }
+            }
+        },
+        "/:deviceId/release": {
+            "post": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Remove the `Device`'s ownership from the `User` who made the request.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "device"
+                ],
+                "summary": "release a device",
+                "operationId": "release",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The device port to release",
+                        "name": "deviceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Device"
+                        }
+                    }
+                }
+            }
+        },
+        "/device": {
+            "post": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Add a `Device` into the database and prepare the necessary directory structure for deploying it.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "operationId": "createDevice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The hostname of the device",
+                        "name": "hostname",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The device's switch port",
+                        "name": "port",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Device"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Delete a `Device` from the database and remove its directory structure used for deployment.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete a device",
+                "operationId": "deleteDevice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The hostname of the device",
+                        "name": "hostname",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "The device's switch port",
+                        "name": "deviceId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {}
+                }
+            }
+        },
+        "/login": {
+            "get": {
+                "description": "Log a `User` into the system.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Log a user in",
+                "operationId": "login",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The username used to login",
+                        "name": "username",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The password used to login",
+                        "name": "password",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {}
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Return the `User` who made the request",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "get the authenticated user",
+                "operationId": "getMe",
+                "responses": {
+                    "200": {
+                        "description": "A JSON object describing a user",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update the `User` who made the request.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "update the authenticated user",
+                "operationId": "updateMe",
+                "parameters": [
+                    {
+                        "description": "the `User` fields which can be updated. Giving all the fields is not mendatory, but at least one of them is required.",
+                        "name": "RequestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PutUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "AA JSON object describing a user",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete the `User` who made the request.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "delethe the autenticated user",
+                "operationId": "deleteMe",
+                "responses": {
+                    "200": {}
+                }
+            }
+        },
+        "/user": {
+            "post": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Create a new Rubus `User` and save it into the database.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create a new user",
+                "operationId": "createUser",
+                "parameters": [
+                    {
+                        "description": "All the fields are required, except for the `role` which will default to `user` if not specified.",
+                        "name": "RequestBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Device": {
+            "type": "object",
+            "properties": {
+                "hostname": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isTurnOn": {
+                    "type": "boolean"
+                },
+                "owner": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.NewUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PutUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "jwt": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "tags": [
+        {
+            "description": "Operations which require administrative rights",
+            "name": "admin"
+        },
+        {
+            "description": "Operations about devices, such as provisioning or deployment",
+            "name": "device"
+        },
+        {
+            "description": "Operations about Users",
+            "name": "user"
+        }
+    ]
+}

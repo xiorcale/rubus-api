@@ -3,56 +3,68 @@ package controllers
 import (
 	"net/http"
 	"os/exec"
+	"strconv"
 
-	"github.com/astaxie/beego"
-	"github.com/kjuvi/rubus-api/models"
-	"github.com/kjuvi/rubus-api/services"
+	"github.com/go-pg/pg/v9"
+	"github.com/xiorcale/rubus-api/models"
+	"github.com/xiorcale/rubus-api/services"
+	"github.com/labstack/echo/v4"
+	"gopkg.in/ini.v1"
 )
 
-// Operations which require administrative rights
+// AdminController
 type AdminController struct {
-	beego.Controller
+	DB  *pg.DB
+	Cfg *ini.File
 }
 
-// @Title CreateUser
-// @Description Create a new Rubus `User` and save it into the database.
-// @Param body body models.NewUser true "All the fields are required, except for the `role` which will default to `user` if not specified."
-// @Success 201 {object} models.User
-// @Failure 409 { "message": "conflict" }
-// @Failure 500 { "message": "Internal Server Error" }
+// CreateUser -
+// @description Create a new Rubus `User` and save it into the database.
+// @id createUser
+// @tags admin
+// @summary Create a new user
+// @accept json
+// @produce json
+// @security jwt
+// @param RequestBody body models.NewUser true "All the fields are required, except for the `role` which will default to `user` if not specified."
+// @success 201 {object} models.User
 // @router /user [post]
-func (a *AdminController) CreateUser() {
-	services.FilterAdmin(&a.Controller)
+func (a *AdminController) CreateUser(c echo.Context) error {
+	if jsonErr := services.FilterAdmin(c); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
 
 	var user models.User
-	if jsonErr := user.Bind(a.Ctx.Input.RequestBody); jsonErr != nil {
-		a.Data["error"] = jsonErr
-		a.Abort("JSONError")
+	cost, _ := a.Cfg.Section("jwt").Key("hashcost").Int()
+	if jsonErr := user.Bind(c, cost); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	if jsonErr := models.AddUser(&user); jsonErr != nil {
-		a.Data["error"] = jsonErr
-		a.Abort("JSONError")
+	if jsonErr := models.AddUser(a.DB, &user); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	a.Ctx.Output.Status = http.StatusCreated
-	a.Data["json"] = user
-	a.ServeJSON()
+	return c.JSON(http.StatusCreated, user)
 }
 
-// @Title AddDevice
-// @Description Add a `Device` into the database and prepare the necessary directory structure for deploying it.
-// @Param hostname query string true "The hostname of the device"
-// @Param port query string true "The device's switch port"
-// @Success 201 {object} models.Device
-// @Failure 409 { "message": "conflict" }
-// @Failure 500 { "message": "Internal Server Error" }
+// CreateDevice -
+// @description Add a `Device` into the database and prepare the necessary directory structure for deploying it.
+// @id createDevice
+// @tags admin
+// @accept json
+// @produce json
+// @security jwt
+// @param hostname query string true "The hostname of the device"
+// @param port query string true "The device's switch port"
+// @success 201 {object} models.Device
 // @router /device [post]
-func (a *AdminController) CreateDevice() {
-	services.FilterAdmin(&a.Controller)
+func (a *AdminController) CreateDevice(c echo.Context) error {
+	if jsonErr := services.FilterAdmin(c); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
 
-	hostname := a.GetString("hostname")
-	port := a.GetString("port")
+	hostname := c.QueryParam("hostname")
+	port := c.QueryParam("port")
 
 	// setup the necessary files and folders for the network boot and deployment
 	cmd := exec.Command("./scripts/add-device.sh", hostname)
@@ -61,39 +73,39 @@ func (a *AdminController) CreateDevice() {
 	// retrieve the device state
 	device, jsonErr := services.GetDevice(port)
 	if jsonErr != nil {
-		a.Data["error"] = jsonErr
-		a.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
 	// "cache" the device by inserting it into the
 	// database for faster read requests
-	if jsonErr := models.AddDevice(device); jsonErr != nil {
-		a.Data["error"] = jsonErr
-		a.Abort("JSONError")
+	if jsonErr := models.AddDevice(a.DB, device); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	a.Ctx.Output.Status = http.StatusCreated
-	a.Data["json"] = device
-	a.ServeJSON()
+	return c.JSON(http.StatusCreated, device)
 }
 
-// @Title DeleteDevice
-// @Description Delete a `Device` from the database and remove its directory structure used for deployment.
-// @Param hostname query string true "The hostname of the device"
-// @Param deviceId query int64 true "The device's switch port"
-// @Success 204
-// @Failure 400 { "message": "Bad Request Error" }
-// @Failure 404 { "message": "Not Found" }
-// @Failure 500 { "message": "Internal Server Error" }
+// DeleteDevice -
+// @description Delete a `Device` from the database and remove its directory structure used for deployment.
+// @id deleteDevice
+// @tags admin
+// @summary Delete a device
+// @produce json
+// @security jwt
+// @param hostname query string true "The hostname of the device"
+// @param deviceId query int64 true "The device's switch port"
+// @success 204
 // @router /device [delete]
-func (a *AdminController) DeleteDevice() {
-	services.FilterAdmin(&a.Controller)
+func (a *AdminController) DeleteDevice(c echo.Context) error {
+	if jsonErr := services.FilterAdmin(c); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
 
-	hostname := a.GetString("hostname")
-	deviceID, err := a.GetInt64("deviceId")
+	hostname := c.QueryParam("hostname")
+	deviceID, err := strconv.Atoi(c.QueryParam("deviceId"))
 	if err != nil {
-		a.Data["error"] = models.NewBadRequestError
-		a.Abort("JSONError")
+		jsonErr := models.NewBadRequestError()
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
 	// delete the necessary files and folders
@@ -101,11 +113,9 @@ func (a *AdminController) DeleteDevice() {
 	cmd := exec.Command("./scripts/delete-device.sh", hostname)
 	cmd.Run()
 
-	if jsonErr := models.DeleteDevice(deviceID); err != nil {
-		a.Data["error"] = jsonErr
-		a.Abort("JSONError")
+	if jsonErr := models.DeleteDevice(a.DB, int64(deviceID)); err != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	a.Ctx.Output.Status = http.StatusNoContent
-	a.ServeJSON()
+	return c.NoContent(http.StatusNoContent)
 }

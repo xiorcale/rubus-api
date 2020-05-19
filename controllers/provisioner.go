@@ -5,92 +5,103 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/astaxie/beego"
-	"github.com/kjuvi/rubus-api/models"
-	"github.com/kjuvi/rubus-api/services"
+	"github.com/go-pg/pg/v9"
+	"github.com/xiorcale/rubus-api/models"
+	"github.com/xiorcale/rubus-api/services"
+	"github.com/labstack/echo/v4"
 )
 
-// Operations about devices, such as provisioning or deployment
+// ProvisionerController -
 type ProvisionerController struct {
-	beego.Controller
+	DB *pg.DB
 }
 
-// @Title Acquire
-// @Description Set the `User` who made the request as the owner of the `Device`.
-// @Param deviceId path int true "The id of the `Device` to acquire"
-// @Success 200 {object} models.Device
+// Acquire -
+// @description Set the `User` who made the request as the owner of the `Device`.
+// @id acquire
+// @tags device
+// @summary acquire a device
+// @produce json
+// @security jwt
+// @param deviceId path int true "The id of the `Device` to acquire"
+// @success 200 {object} models.Device
 // @router /:deviceId/acquire [post]
-func (p *ProvisionerController) Acquire() {
-	port, _ := p.GetInt64(":deviceId")
-	claims := p.Ctx.Request.Context().Value("claims").(*models.Claims)
+func (p *ProvisionerController) Acquire(c echo.Context) error {
+	port, _ := strconv.Atoi(c.Param("deviceId"))
+	claims := c.Request().Context().Value("claims").(*models.Claims)
 
 	// get the requested `Device`
-	device, jsonErr := models.GetDevice(port)
+	device, jsonErr := models.GetDevice(p.DB, int64(port))
 	if jsonErr != nil {
-		p.Data["error"] = jsonErr
-		p.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
 	if device.Owner != nil {
-		services.FilterOwnerOrAdmin(&p.Controller, *device.Owner)
+		services.FilterOwnerOrAdmin(c, *device.Owner)
 	}
 
-	if err := models.AcquireDevice(device, claims.UserID); err != nil {
-		p.Data["error"] = models.NewInternalServerError()
-		p.Abort("JSONError")
+	if err := models.AcquireDevice(p.DB, device, claims.UserID); err != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	p.Ctx.Output.Status = http.StatusOK
-	p.Data["json"] = device
-	p.ServeJSON()
+	return c.JSON(http.StatusOK, device)
 }
 
-// @Title Release
-// @Description Remove the `Device`'s ownership from the `User` who made the request.
-// @Param	deviceId		path 	int	true		"The device port to release"
-// @Success 200 {object} models.Device
+// Release -
+// @description Remove the `Device`'s ownership from the `User` who made the request.
+// @id release
+// @tags device
+// @summary release a device
+// @produce json
+// @security jwt
+// @param	deviceId		path 	int	true		"The device port to release"
+// @success 200 {object} models.Device
 // @router /:deviceId/release [post]
-func (p *ProvisionerController) Release() {
-	port, _ := p.GetInt64(":deviceId")
+func (p *ProvisionerController) Release(c echo.Context) error {
+	port, _ := strconv.Atoi(c.Param("deviceId"))
 
 	// get the requested `Device`
-	device, jsonErr := models.GetDevice(port)
+	device, jsonErr := models.GetDevice(p.DB, int64(port))
 	if jsonErr != nil {
-		p.Data["error"] = jsonErr
-		p.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
 	if device.Owner != nil {
-		services.FilterOwnerOrAdmin(&p.Controller, *device.Owner)
+		if jsonErr := services.FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+			return echo.NewHTTPError(jsonErr.Status, jsonErr)
+		}
 	}
 
-	if err := models.ReleaseDevice(device); err != nil {
-		p.Data["error"] = models.NewInternalServerError()
-		p.Abort("JSONError")
+	if err := models.ReleaseDevice(p.DB, device); err != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	p.Ctx.Output.Status = http.StatusOK
-	p.Data["json"] = device
-	p.ServeJSON()
+	return c.JSON(http.StatusOK, device)
 }
 
-// @Title Deploy
-// @Description Configure the PXE boot for the `Device` and reboot it.
-// @Param deviceId path int true "The device id to deploy"
-// @Success	204
+// Deploy -
+// @description Configure the PXE boot for the `Device` and reboot it.
+// @id deploy
+// @tags device
+// @summary deploy a device
+// @produce json
+// @security jwt
+// @param deviceId path int true "The device id to deploy"
+// @success	204
 // @router /:deviceId/deploy [post]
-func (p *ProvisionerController) Deploy() {
-	port, _ := p.GetInt64(":deviceId")
+func (p *ProvisionerController) Deploy(c echo.Context) error {
+	port, _ := strconv.Atoi(c.Param("deviceId"))
 
 	// get the requested `Device`
-	device, jsonErr := models.GetDevice(port)
+	device, jsonErr := models.GetDevice(p.DB, int64(port))
 	if jsonErr != nil {
-		p.Data["error"] = jsonErr
-		p.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
 	if device.Owner != nil {
-		services.FilterOwnerOrAdmin(&p.Controller, *device.Owner)
+		if jsonErr := services.FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+			return echo.NewHTTPError(jsonErr.Status, jsonErr)
+		}
 	}
 
 	// setup the necessary files and folders for the network boot and deployment
@@ -98,22 +109,19 @@ func (p *ProvisionerController) Deploy() {
 	go cmd.Run()
 
 	if device.IsTurnOn {
-		jsonErr := services.PowerDeviceOff(strconv.FormatInt(port, 10))
+		jsonErr := services.PowerDeviceOff(strconv.FormatInt(int64(port), 10))
 		if jsonErr != nil {
-			p.Data["error"] = jsonErr
-			p.Abort("JSONError")
+			return echo.NewHTTPError(jsonErr.Status, jsonErr)
 		}
-		models.SwitchDevicePower(device)
+		models.SwitchDevicePower(p.DB, device)
 	}
 
-	jsonErr = services.PowerDeviceOn(strconv.FormatInt(port, 10))
+	jsonErr = services.PowerDeviceOn(strconv.FormatInt(int64(port), 10))
 	if jsonErr != nil {
-		p.Data["error"] = jsonErr
-		p.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	models.SwitchDevicePower(device)
+	models.SwitchDevicePower(p.DB, device)
 
-	p.Ctx.Output.Status = http.StatusNoContent
-	p.ServeJSON()
+	return c.NoContent(http.StatusNoContent)
 }

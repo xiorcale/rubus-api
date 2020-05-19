@@ -4,117 +4,127 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/astaxie/beego"
-	"github.com/kjuvi/rubus-api/models"
-	"github.com/kjuvi/rubus-api/services"
+	"github.com/go-pg/pg/v9"
+	"github.com/xiorcale/rubus-api/models"
+	"github.com/xiorcale/rubus-api/services"
+	"github.com/labstack/echo/v4"
 )
 
-// Operations about devices such as provisioning or deployment
+// DeviceController -
 type DeviceController struct {
-	beego.Controller
+	DB *pg.DB
 }
 
-// @Title ListDevice
-// @Description List all the `Device`.
-// @Success 200 {object} []models.Device
-// @Failure 500 { "message": "Internal Server Error" }
+// ListDevice -
+// @description List all the `Device`
+// @id listDevice
+// @tags device
+// @summary list all the devices
+// @produce json
+// @security jwt
+// @success 200 {array} models.Device "A JSON array listing all the devices"
 // @router / [get]
-func (d *DeviceController) ListDevice() {
-	devices, jsonErr := models.GetAllDevices()
+func (d *DeviceController) ListDevice(c echo.Context) error {
+	devices, jsonErr := models.GetAllDevices(d.DB)
 	if jsonErr != nil {
-		d.Data["error"] = jsonErr
-		d.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	d.Data["json"] = devices
-	d.ServeJSON()
+	c.JSON(http.StatusOK, devices)
 }
 
-// @Title GetDevice
-// @Description Return the `Device` with the given `deviceId`.
-// @Param deviceId path int true "The id of the `Device` to get"
-// @Success 200 {object} models.Device
-// @Failure 400 { "message": "Bad Request Error" }
-// @Failure 404 { "message": "User does not exists" }
-// @Failure 500 { "message": "Internal Server Error" }
+// Get -
+// @description Return the `Device` with the given `deviceId`.
+// @id getDevice
+// @tags device
+// @summary get a device by id
+// @produce json
+// @security jwt
+// @param deviceId path int true "The id of the `Device` to get"
+// @success 200 {object} models.Device
 // @router /:deviceId [get]
-func (d *DeviceController) Get() {
-	deviceID, err := d.GetInt64(":deviceId")
+func (d *DeviceController) Get(c echo.Context) error {
+	deviceID, err := strconv.Atoi(c.Param("deviceId"))
+
 	if err != nil {
-		d.Data["error"] = models.NewBadRequestError
-		d.Abort("JSONError")
+		jsonErr := models.NewBadRequestError()
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	device, jsonErr := models.GetDevice(deviceID)
+	device, jsonErr := models.GetDevice(d.DB, int64(deviceID))
 	if jsonErr != nil {
-		d.Data["error"] = jsonErr
-		d.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	d.Ctx.Output.Status = http.StatusOK
-	d.Data["json"] = device
-	d.ServeJSON()
+	return c.JSON(http.StatusOK, device)
 }
 
-// @Title PowerOn
-// @Description Boot the `Device` with the given `deviceId`.
-// @Param deviceId path int true "The device id to turn on"
-// @Success 204
+// PowerOn -
+// @description Boot the `Device` with the given `deviceId`.
+// @id powerOn
+// @tags device
+// @summary Boot a device
+// @produce json
+// @security jwt
+// @param deviceId path int true "The device id to turn on"
+// @success 204
 // @router /:deviceId/on [post]
-func (d *DeviceController) PowerOn() {
-	port := d.GetString(":deviceId")
+func (d *DeviceController) PowerOn(c echo.Context) error {
+	port := c.Param("deviceId")
 	deviceID, _ := strconv.Atoi(port)
-	device, jsonErr := models.GetDevice(int64(deviceID))
+	device, jsonErr := models.GetDevice(d.DB, int64(deviceID))
 	if jsonErr != nil {
-		d.Data["error"] = jsonErr
-		d.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
 	if device.Owner != nil {
-		services.FilterOwnerOrAdmin(&d.Controller, *device.Owner)
+		if jsonErr := services.FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+			return echo.NewHTTPError(jsonErr.Status, jsonErr)
+		}
 	}
 
 	if jsonErr := services.PowerDeviceOn(port); jsonErr != nil {
-		d.Data["error"] = jsonErr
-		d.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
 	if !device.IsTurnOn {
-		models.SwitchDevicePower(device)
+		models.SwitchDevicePower(d.DB, device)
 	}
 
-	d.Ctx.Output.Status = http.StatusNoContent
-	d.ServeJSON()
+	return c.NoContent(http.StatusNoContent)
 }
 
-// PowerOff shuts down the `Device` on the given `port`
-// @Title PowerOff
-// @Description Shut down the `Device` with the given `deviceId`.
-// @Param deviceId path int true "The device id to turn off"
-// @Success 204
+// PowerOff -
+// @description Shuts down the `Device` on the given `port`
+// @id powerOff
+// @tags device
+// @summary Shut down a device
+// @produce json
+// @security jwt
+// @param deviceId path int true "The device id to turn off"
+// @success 204
 // @router /:deviceId/off [post]
-func (d *DeviceController) PowerOff() {
-	port := d.GetString(":deviceId")
+func (d *DeviceController) PowerOff(c echo.Context) error {
+	port := c.Param("deviceId")
 	deviceID, _ := strconv.Atoi(port)
-	device, jsonErr := models.GetDevice(int64(deviceID))
+	device, jsonErr := models.GetDevice(d.DB, int64(deviceID))
 	if jsonErr != nil {
-		d.Data["error"] = jsonErr
-		d.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
 	if device.Owner != nil {
-		services.FilterOwnerOrAdmin(&d.Controller, *device.Owner)
+		if jsonErr := services.FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+			return echo.NewHTTPError(jsonErr.Status, jsonErr)
+		}
 	}
 
 	if jsonErr := services.PowerDeviceOff(port); jsonErr != nil {
-		d.Data["error"] = jsonErr
-		d.Abort("JSONError")
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
 	if device.IsTurnOn {
-		models.SwitchDevicePower(device)
+		models.SwitchDevicePower(d.DB, device)
 	}
 
-	d.Ctx.Output.Status = http.StatusNoContent
-	d.ServeJSON()
+	return c.NoContent(http.StatusNoContent)
 }

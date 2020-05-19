@@ -2,29 +2,22 @@ package models
 
 import (
 	"net/http"
-	"strings"
 
-	"github.com/astaxie/beego/orm"
+	"github.com/go-pg/pg/v9"
 )
 
 // Device contains the information about a device
 type Device struct {
-	ID       int64  `json:"id" orm:"pk"`
+	ID       int64  `json:"id" pg:",pk"`
 	Hostname string `json:"hostname"`
 	IsTurnOn bool   `json:"isTurnOn"`
 	Owner    *int64 `json:"owner" orm:"null"`
 }
 
-func init() {
-	orm.RegisterModel(new(Device))
-}
-
 // AddDevice inserts a new `Device` into the database
-func AddDevice(d *Device) *JSONError {
-	o := orm.NewOrm()
-
-	if _, err := o.Insert(d); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
+func AddDevice(db *pg.DB, d *Device) *JSONError {
+	if err := db.Insert(d); err != nil {
+		if pgErr, ok := err.(pg.Error); ok && pgErr.IntegrityViolation() {
 			return &JSONError{
 				Status: http.StatusConflict,
 				Error:  "id already exists.",
@@ -37,29 +30,20 @@ func AddDevice(d *Device) *JSONError {
 }
 
 // AddDeviceMulti insters multiple `Device` into the database
-func AddDeviceMulti(devices *[]Device) *JSONError {
-	o := orm.NewOrm()
-
-	if _, err := o.InsertMulti(100, devices); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			return &JSONError{
-				Status: http.StatusConflict,
-				Error:  "id already exists.",
-			}
+func AddDeviceMulti(db *pg.DB, devices *[]Device) *JSONError {
+	for _, d := range *devices {
+		if err := AddDevice(db, &d); err != nil {
+			return err
 		}
-		return NewInternalServerError()
 	}
-
 	return nil
 }
 
 // GetDevice returns the `Device` with the given `deviceID` from the database
-func GetDevice(deviceID int64) (*Device, *JSONError) {
-	o := orm.NewOrm()
-
-	device := Device{ID: deviceID}
-	if err := o.Read(&device); err != nil {
-		if err == orm.ErrNoRows {
+func GetDevice(db *pg.DB, deviceID int64) (*Device, *JSONError) {
+	device := &Device{ID: deviceID}
+	if err := db.Select(device); err != nil {
+		if err == pg.ErrNoRows {
 			return nil, &JSONError{
 				Status: http.StatusNotFound,
 				Error:  "Device does not exist.",
@@ -68,15 +52,12 @@ func GetDevice(deviceID int64) (*Device, *JSONError) {
 		return nil, NewInternalServerError()
 	}
 
-	return &device, nil
+	return device, nil
 }
 
 // GetAllDevices returns all the `Device` from the database
-func GetAllDevices() ([]*Device, *JSONError) {
-	o := orm.NewOrm()
-
-	devices := []*Device{}
-	if _, err := o.QueryTable("device").All(&devices); err != nil {
+func GetAllDevices(db *pg.DB) (devices []*Device, jsonErr *JSONError) {
+	if err := db.Model(devices).Select(); err != nil {
 		return nil, NewInternalServerError()
 	}
 
@@ -84,18 +65,15 @@ func GetAllDevices() ([]*Device, *JSONError) {
 }
 
 // DeleteDevice removes the given Rubus `Device` from the database
-func DeleteDevice(uid int64) *JSONError {
-	o := orm.NewOrm()
-
-	device := Device{ID: uid}
-	uid, err := o.Delete(&device)
-	if uid == 0 {
-		return &JSONError{
-			Status: http.StatusNotFound,
-			Error:  "device does not exist.",
+func DeleteDevice(db *pg.DB, uid int64) *JSONError {
+	device := &Device{ID: uid}
+	if err := db.Delete(device); err != nil {
+		if err == pg.ErrNoRows {
+			return &JSONError{
+				Status: http.StatusNotFound,
+				Error:  "device does not exist.",
+			}
 		}
-	}
-	if err != nil {
 		return NewInternalServerError()
 	}
 
@@ -104,12 +82,10 @@ func DeleteDevice(uid int64) *JSONError {
 
 // SwitchDevicePower inverse the `isTurnOn` field of the `Device` with the given
 // `deviceID`
-func SwitchDevicePower(device *Device) (*Device, *JSONError) {
-	o := orm.NewOrm()
-
+func SwitchDevicePower(db *pg.DB, device *Device) (*Device, *JSONError) {
 	device.IsTurnOn = !device.IsTurnOn
 
-	if _, err := o.Update(device); err != nil {
+	if err := db.Update(device); err != nil {
 		return nil, NewInternalServerError()
 	}
 
@@ -117,12 +93,10 @@ func SwitchDevicePower(device *Device) (*Device, *JSONError) {
 }
 
 // AcquireDevice sets the `User` parameter as the owner of the `Device`
-func AcquireDevice(device *Device, uid int64) *JSONError {
-	o := orm.NewOrm()
-
+func AcquireDevice(db *pg.DB, device *Device, uid int64) *JSONError {
 	device.Owner = &uid
 
-	if _, err := o.Update(device); err != nil {
+	if err := db.Update(device); err != nil {
 		return NewInternalServerError()
 	}
 
@@ -131,12 +105,10 @@ func AcquireDevice(device *Device, uid int64) *JSONError {
 
 // ReleaseDevice sets the `owner` of the `Device` as nil, if it is the current
 // `owner` which is modifying it.
-func ReleaseDevice(device *Device) *JSONError {
-	o := orm.NewOrm()
-
+func ReleaseDevice(db *pg.DB, device *Device) *JSONError {
 	device.Owner = nil
 
-	if _, err := o.Update(device); err != nil {
+	if err := db.Update(device); err != nil {
 		return NewInternalServerError()
 	}
 

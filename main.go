@@ -1,64 +1,76 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
-	"github.com/kjuvi/rubus-api/controllers"
-	"github.com/kjuvi/rubus-api/models"
-	_ "github.com/kjuvi/rubus-api/routers"
-	"golang.org/x/crypto/bcrypt"
-
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/orm"
-	_ "github.com/lib/pq"
+	"github.com/go-pg/pg/v9"
+	_ "github.com/xiorcale/rubus-api/routers"
+	"github.com/labstack/echo/v4"
+	"gopkg.in/ini.v1"
 )
 
-func init() {
-	orm.RegisterDriver("postgres", orm.DRPostgres)
+// @title Rubus API
+// @version 1.0
+// @description Rubus REST API
+// @termOfService http://swagger.io/terms/
 
-	user := beego.AppConfig.String("user")
+// @contact.name Quentin Vaucher
+// @contact.email quentin.vaucher3@master.hes-so.ch
 
-	password := beego.AppConfig.String("password")
-	host := beego.AppConfig.String("host")
-	dbName := beego.AppConfig.String("dbname")
-	dataSource := fmt.Sprintf(
-		"user=%s password=%s host=%s dbname=%s sslmode=disable",
-		user, password, host, dbName,
-	)
-	orm.RegisterDataBase(
-		"default",
-		"postgres",
-		dataSource,
-	)
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:1323
+
+// @securityDefinitions.apikey jwt
+// @in header
+// @name Authorization
+
+// @tag.name admin
+// @tag.description Operations which require administrative rights
+// @tag.name device
+// @tag.description Operations about devices, such as provisioning or deployment
+// @tag.name user
+// @tag.description Operations about Users
+
+type server struct {
+	e   *echo.Echo
+	db  *pg.DB
+	cfg *ini.File
 }
 
 func main() {
-	if beego.BConfig.RunMode == "dev" {
-		beego.BConfig.WebConfig.DirectoryIndex = true
-		beego.BConfig.WebConfig.StaticDir["/swagger"] = "swagger"
+	cfg, err := ini.Load("./conf/config.ini")
+	if err != nil {
+		log.Fatalf("Fail to readfile: %v", err)
 	}
 
-	name := "default"
-	force := true
-	verbose := true
+	s := server{}
 
-	if err := orm.RunSyncdb(name, force, verbose); err != nil {
-		panic(err)
+	// init db
+	dbCfg := cfg.Section("database")
+	s.db = pg.Connect(&pg.Options{
+		Addr:     dbCfg.Key("address").String(),
+		User:     dbCfg.Key("user").String(),
+		Password: dbCfg.Key("password").String(),
+		Database: dbCfg.Key("db_name").String(),
+	})
+	defer s.db.Close()
+
+	if recreate, _ := dbCfg.Key("recreate").Bool(); recreate {
+		log.Printf("Recreate database schemas")
+		if err := deleteSchema(s.db); err != nil {
+			panic(err)
+		}
+		if err := createSchema(s.db); err != nil {
+			panic(err)
+		}
 	}
 
-	// TODO: change this for prod
-	// insert a default administrator
-	cost, _ := beego.AppConfig.Int("hashcost")
-	bytes, _ := bcrypt.GenerateFromPassword([]byte("rubus_secret"), cost)
-	admin := models.User{
-		Username:     "admin",
-		Email:        "admin@mail.com",
-		PasswordHash: string(bytes),
-		Role:         models.EnumRoleAdmin,
-	}
-	models.AddUser(&admin)
+	// init REST API
+	s.e = echo.New()
 
-	beego.ErrorController(&controllers.ErrorController{})
+	createRESTEndpoints(s)
 
-	beego.Run()
+	s.e.Logger.Fatal(s.e.Start(":1323"))
 }

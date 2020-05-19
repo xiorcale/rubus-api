@@ -1,13 +1,11 @@
 package models
 
 import (
-	"encoding/json"
 	"net/http"
 	"regexp"
-	"strings"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/orm"
+	"github.com/go-pg/pg/v9"
+	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,11 +20,11 @@ const (
 
 // User is the `User` model in the database
 type User struct {
-	ID           int64  `json:"id" orm:"pk;auto"`
-	Username     string `json:"username" orm:"unique"`
-	Email        string `json:"email" orm:"unique"`
+	ID           int64  `json:"id" pg:",pk"`
+	Username     string `json:"username" pg:",unique, notnull"`
+	Email        string `json:"email" pg:",unique, notnull"`
 	Role         Role   `json:"role"`
-	PasswordHash string `json:"-"`
+	PasswordHash string `json:"-" pg:",notnull"`
 }
 
 // NewUser is the model sent to create a new `User`
@@ -44,14 +42,11 @@ type PutUser struct {
 	Password string `json:"password"`
 }
 
-func init() {
-	orm.RegisterModel(new(User))
-}
-
 // Bind transforms the given payload into a `User`, with some validations
-func (u *User) Bind(requestBody []byte) *JSONError {
-	var newUser NewUser
-	if err := json.Unmarshal(requestBody, &newUser); err != nil {
+func (u *User) Bind(c echo.Context, cost int) *JSONError {
+	newUser := &NewUser{}
+	db := &echo.DefaultBinder{}
+	if err := db.Bind(newUser, c); err != nil {
 		return NewBadRequestError()
 	}
 
@@ -82,7 +77,6 @@ func (u *User) Bind(requestBody []byte) *JSONError {
 		newUser.Role = EnumRoleUser
 	}
 
-	cost, _ := beego.AppConfig.Int("hashcost")
 	bytes, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), cost)
 
 	// `NewUser` --> `User`
@@ -97,9 +91,10 @@ func (u *User) Bind(requestBody []byte) *JSONError {
 // BindWithEmptyFields transforms the given payload into a `User`, with
 // some validations, but does not require any field (they should be either nil
 // or valid)
-func (u *User) BindWithEmptyFields(requestBody []byte) *JSONError {
-	var newUser NewUser
-	if err := json.Unmarshal(requestBody, &newUser); err != nil {
+func (u *User) BindWithEmptyFields(c echo.Context, cost int) *JSONError {
+	newUser := &NewUser{}
+	db := &echo.DefaultBinder{}
+	if err := db.Bind(newUser, c); err != nil {
 		return NewBadRequestError()
 	}
 
@@ -125,7 +120,6 @@ func (u *User) BindWithEmptyFields(requestBody []byte) *JSONError {
 				Error:  "password should be at least 8 characters.",
 			}
 		}
-		cost, _ := beego.AppConfig.Int("hashcost")
 		bytes, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), cost)
 		u.PasswordHash = string(bytes)
 	}
@@ -134,11 +128,9 @@ func (u *User) BindWithEmptyFields(requestBody []byte) *JSONError {
 }
 
 // AddUser inserts a new `User` into the database
-func AddUser(u *User) *JSONError {
-	o := orm.NewOrm()
-
-	if _, err := o.Insert(u); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
+func AddUser(db *pg.DB, user *User) *JSONError {
+	if err := db.Insert(user); err != nil {
+		if pgErr, ok := err.(pg.Error); ok && pgErr.IntegrityViolation() {
 			return &JSONError{
 				Status: http.StatusConflict,
 				Error:  "username and/or email already exist(s).",
@@ -151,12 +143,10 @@ func AddUser(u *User) *JSONError {
 }
 
 // GetUser returns the `User` with the given `uid` from the database
-func GetUser(uid int64) (*User, *JSONError) {
-	o := orm.NewOrm()
-
-	user := User{ID: uid}
-	if err := o.Read(&user); err != nil {
-		if err == orm.ErrNoRows {
+func GetUser(db *pg.DB, uid int64) (*User, *JSONError) {
+	user := &User{ID: uid}
+	if err := db.Select(user); err != nil {
+		if err == pg.ErrNoRows {
 			return nil, &JSONError{
 				Status: http.StatusNotFound,
 				Error:  "user does not exist.",
@@ -165,14 +155,12 @@ func GetUser(uid int64) (*User, *JSONError) {
 		return nil, NewInternalServerError()
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 // GetAllUsers returns all the `User` from the database
-func GetAllUsers() (users []*User, jsonErr *JSONError) {
-	o := orm.NewOrm()
-
-	if _, err := o.QueryTable("user").All(&users); err != nil {
+func GetAllUsers(db *pg.DB) (users []*User, jsonErr *JSONError) {
+	if err := db.Model(users).Select(); err != nil {
 		return nil, NewInternalServerError()
 	}
 
@@ -180,10 +168,8 @@ func GetAllUsers() (users []*User, jsonErr *JSONError) {
 }
 
 // UpdateUser modifies the `User` with the given `uid` in the database, with some validations
-func UpdateUser(uid int64, uu *User) (u *User, jsonErr *JSONError) {
-	o := orm.NewOrm()
-
-	u, jsonErr = GetUser(uid)
+func UpdateUser(db *pg.DB, uid int64, uu *User) (u *User, jsonErr *JSONError) {
+	u, jsonErr = GetUser(db, uid)
 	if jsonErr != nil {
 		return nil, jsonErr
 	}
@@ -198,16 +184,12 @@ func UpdateUser(uid int64, uu *User) (u *User, jsonErr *JSONError) {
 		u.PasswordHash = uu.PasswordHash
 	}
 
-	if _, err := o.Update(u); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
+	if err := db.Update(u); err != nil {
+		if pgErr, ok := err.(pg.Error); ok && pgErr.IntegrityViolation() {
 			return nil, &JSONError{
 				Status: http.StatusConflict,
 				Error:  "username and/or email already exist(s).",
 			}
-			//jsonErr.Status = http.StatusConflict
-			//jsonErr.Error = "username or email already exists"
-			//logs.Debug("json error: ", *jsonErr)
-			//return nil, jsonErr
 		}
 		return nil, NewInternalServerError()
 	}
@@ -216,18 +198,15 @@ func UpdateUser(uid int64, uu *User) (u *User, jsonErr *JSONError) {
 }
 
 // DeleteUser removes the given Rubus `User` from the database
-func DeleteUser(uid int64) *JSONError {
-	o := orm.NewOrm()
-
-	user := User{ID: uid}
-	uid, err := o.Delete(&user)
-	if uid == 0 {
-		return &JSONError{
-			Status: http.StatusNotFound,
-			Error:  "user does not exist.",
+func DeleteUser(db *pg.DB, uid int64) *JSONError {
+	user := &User{ID: uid}
+	if err := db.Delete(user); err != nil {
+		if err == pg.ErrNoRows {
+			return &JSONError{
+				Status: http.StatusNotFound,
+				Error:  "user does not exist.",
+			}
 		}
-	}
-	if err != nil {
 		return NewInternalServerError()
 	}
 
@@ -235,17 +214,16 @@ func DeleteUser(uid int64) *JSONError {
 }
 
 // Login checks if the given credentials are valid or not
-func Login(username, password string) (*int64, *Role, bool) {
-	o := orm.NewOrm()
+func Login(db *pg.DB, username, password string) (*int64, *Role, bool) {
+	user := &User{}
 
-	var user User
-	err := o.QueryTable("user").Filter("username", username).One(&user)
-
-	if err == orm.ErrNoRows {
-		return nil, nil, false
+	if err := db.Model(user).Where("username = ?", username).Select(); err != nil {
+		if err == pg.ErrNoRows {
+			return nil, nil, false
+		}
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		return nil, nil, false
 	}
