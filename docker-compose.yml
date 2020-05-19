@@ -6,23 +6,24 @@ networks:
 
 services:
     rubus_api:
-        build: .
+        image: golang
         restart: always
         ports:
-            - 8080:8080
+            - 1323:1323
         privileged: true # needed to mount the overlay (can we do better?)
         volumes:
-            - .:/go/src/github.com/xiorcale/rubus-api  # workspace is needed for development only
+            - .:/code  # workspace is needed for development only
             - /tftp:/tftp
             - /pxe:/pxe
             - /etc/exports:/etc/exports
+        working_dir: /code
         depends_on:
             - rubus_db
             - rubus_provider
         command: go run .
         networks:
             - rubus_network
-    
+
     rubus_db:
         image: postgres:latest
         environment:
@@ -31,7 +32,7 @@ services:
             POSTGRES_PASSWORD: "rubus_password"
         networks:
             - rubus_network
-    
+
     rubus_provider:
         build: ./providers/unifi/python-cli
         expose:

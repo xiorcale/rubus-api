@@ -5,10 +5,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	echoSwagger "github.com/swaggo/echo-swagger"
-	"github.com/xiorcale/rubus-api/controllers"
 
-	_ "github.com/xiorcale/docs"
+	// echoSwagger "github.com/swaggo/echo-swagger"
+	"github.com/xiorcale/rubus-api/controllers"
+	// _ "github.com/xiorcale/rubus-api/docs"
 )
 
 func createRESTEndpoints(s server) {
@@ -26,7 +26,7 @@ func createRESTEndpoints(s server) {
 	s.e.Use(middleware.CORS())
 
 	// documentation
-	s.e.GET("/swagger/*", echoSwagger.WrapHandler)
+	// s.e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// controllers
 	user := controllers.UserController{DB: s.db, Cfg: s.cfg}
@@ -40,10 +40,10 @@ func createRESTEndpoints(s server) {
 	adminGr := s.e.Group("/admin")
 
 	// jwt protection
-	secret := s.cfg.Section("jwt").Key("jwtsecret").String()
-	userGr.Use(middleware.JWT([]byte(secret)))
-	deviceGr.Use(middleware.JWT([]byte(secret)))
-	adminGr.Use(middleware.JWT([]byte(secret)))
+	// secret := "secret" // s.cfg.Section("jwt").Key("jwtsecret").String()
+	// userGr.Use(middleware.JWT([]byte(secret)))
+	// deviceGr.Use(middleware.JWT([]byte(secret)))
+	// adminGr.Use(middleware.JWT([]byte(secret)))
 
 	// user endpoints
 	userGr.GET("", user.ListUser)

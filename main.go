@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/go-pg/pg/v9"
-	_ "github.com/xiorcale/rubus-api/routers"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/ini.v1"
 )
