@@ -162,39 +162,6 @@
             }
         },
         "/admin/user/{id}": {
-            "put": {
-                "description": "Update the `User` with the given id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "Update a user expiration date",
-                "operationId": "updateUser",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "The id from the user to update",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "The new expiration date",
-                        "name": "expiration",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {}
-                }
-            },
             "delete": {
                 "description": "Delete the `User` with the given id",
                 "produces": [
@@ -211,6 +178,41 @@
                         "description": "The id from the user to delete",
                         "name": "id",
                         "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {}
+                }
+            }
+        },
+        "/admin/user/{id}/expiration": {
+            "post": {
+                "description": "Update the expiration date of a the`User` with the given id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Set a new expiration date for a `User`",
+                "operationId": "updateUser",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The id from the user to update",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The new expiration date",
+                        "name": "expiration",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -443,7 +445,7 @@
                 }
             }
         },
-        "/user/login": {
+        "/login": {
             "get": {
                 "description": "Log a `User` into the system.",
                 "consumes": [
@@ -453,7 +455,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "authentication"
                 ],
                 "summary": "Log a user in",
                 "operationId": "login",
@@ -646,6 +648,10 @@
         }
     },
     "tags": [
+        {
+            "description": "Operations about user authentication",
+            "name": "authentication"
+        },
         {
             "description": "Operations which require administrative rights",
             "name": "admin"

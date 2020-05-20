@@ -25,6 +25,8 @@ import (
 // @in header
 // @name Authorization
 
+// @tag.name authentication
+// @tag.description Operations about user authentication
 // @tag.name admin
 // @tag.description Operations which require administrative rights
 // @tag.name device

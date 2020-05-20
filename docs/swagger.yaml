@@ -183,14 +183,15 @@ paths:
       produces:
       - application/json
       responses:
-        "200": {}
+        "204": {}
       summary: Delete a user
       tags:
       - admin
-    put:
+  /admin/user/{id}/expiration:
+    post:
       consumes:
       - application/json
-      description: Update the `User` with the given id
+      description: Update the expiration date of a the`User` with the given id
       operationId: updateUser
       parameters:
       - description: The id from the user to update
@@ -207,7 +208,7 @@ paths:
       - application/json
       responses:
         "200": {}
-      summary: Update a user expiration date
+      summary: Set a new expiration date for a `User`
       tags:
       - admin
   /device:
@@ -351,7 +352,7 @@ paths:
       summary: release a device
       tags:
       - device
-  /user/login:
+  /login:
     get:
       consumes:
       - application/json
@@ -374,7 +375,7 @@ paths:
         "200": {}
       summary: Log a user in
       tags:
-      - user
+      - authentication
   /user/me:
     delete:
       description: Delete the `User` who made the request.
@@ -431,6 +432,8 @@ securityDefinitions:
     type: apiKey
 swagger: "2.0"
 tags:
+- description: Operations about user authentication
+  name: authentication
 - description: Operations which require administrative rights
   name: admin
 - description: Operations about devices, such as provisioning or deployment

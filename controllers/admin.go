@@ -77,30 +77,38 @@ func (a *AdminController) ListUser(c echo.Context) error {
 // @summary Delete a user
 // @produce json
 // @param id path int64 true "The id from the user to delete"
-// @success 200
+// @success 204
 // @router /admin/user/{id} [delete]
 func (a *AdminController) DeleteUser(c echo.Context) error {
+	if jsonErr := FilterAdmin(c); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
+
 	id, _ := strconv.Atoi(c.Param("id"))
 
 	if jsonErr := models.DeleteUser(a.DB, int64(id)); jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	return c.NoContent(http.StatusOK)
+	return c.NoContent(http.StatusNoContent)
 }
 
 // UpdateUserExpiration -
-// @description Update the `User` with the given id
+// @description Update the expiration date of a the`User` with the given id
 // @id updateUser
 // @tags admin
-// @summary Update a user expiration date
+// @summary Set a new expiration date for a `User`
 // @accept json
 // @produce json
 // @param id path int64 true "The id from the user to update"
 // @param expiration query string true "The new expiration date"
 // @success 200
-// @router /admin/user/{id} [put]
+// @router /admin/user/{id}/expiration [post]
 func (a *AdminController) UpdateUserExpiration(c echo.Context) error {
+	if jsonErr := FilterAdmin(c); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
+
 	id, _ := strconv.Atoi(c.Param("id"))
 	expriration := c.QueryParam("expiration")
 
