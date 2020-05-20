@@ -30,7 +30,7 @@ func (d *DeviceController) ListDevice(c echo.Context) error {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	c.JSON(http.StatusOK, devices)
+	return c.JSON(http.StatusOK, devices)
 }
 
 // Get -

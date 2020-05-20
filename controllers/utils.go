@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"strconv"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 )
@@ -11,8 +9,8 @@ import (
 // current context
 func ExtractIDFromToken(c echo.Context) int64 {
 	token := c.Get("user").(*jwt.Token)
+	c.Logger().Printf("token: ", token)
 	claims := token.Claims.(jwt.MapClaims)
-	idStr := claims["ID"].(string)
-	id, _ := strconv.Atoi(idStr)
+	id := claims["ID"].(float64)
 	return int64(id)
 }

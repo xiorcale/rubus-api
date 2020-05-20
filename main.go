@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/go-pg/pg/v9"
-	_ "github.com/xiorcale/rubus-api/routers"
 	"github.com/labstack/echo/v4"
 	"gopkg.in/ini.v1"
 )
@@ -40,15 +39,12 @@ type server struct {
 }
 
 func main() {
-	cfg, err := ini.Load("./conf/config.ini")
-	if err != nil {
-		log.Fatalf("Fail to readfile: %v", err)
-	}
-
 	s := server{}
 
+	s.cfg, _ = ini.Load("./conf/config.ini")
+
 	// init db
-	dbCfg := cfg.Section("database")
+	dbCfg := s.cfg.Section("database")
 	s.db = pg.Connect(&pg.Options{
 		Addr:     dbCfg.Key("address").String(),
 		User:     dbCfg.Key("user").String(),
@@ -65,11 +61,13 @@ func main() {
 		if err := createSchema(s.db); err != nil {
 			panic(err)
 		}
+		if err := createAdmin(s); err != nil {
+			panic(err)
+		}
 	}
 
 	// init REST API
 	s.e = echo.New()
-
 	createRESTEndpoints(s)
 
 	s.e.Logger.Fatal(s.e.Start(":1323"))

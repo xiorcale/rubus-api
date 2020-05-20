@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-pg/pg/v9"
+	"github.com/labstack/echo/v4"
 	"github.com/xiorcale/rubus-api/models"
 	"github.com/xiorcale/rubus-api/services"
-	"github.com/labstack/echo/v4"
 	"gopkg.in/ini.v1"
 )
 
@@ -51,6 +52,8 @@ func (u *UserController) ListUser(c echo.Context) error {
 func (u *UserController) GetMe(c echo.Context) error {
 	userID := ExtractIDFromToken(c)
 
+	c.Logger().Printf("user id: ", userID)
+
 	user, jsonErr := models.GetUser(u.DB, userID)
 	if jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
@@ -73,7 +76,7 @@ func (u *UserController) UpdateMe(c echo.Context) error {
 	userID := ExtractIDFromToken(c)
 
 	var user models.User
-	cost, _ := u.Cfg.Section("jwt").Key("hashcost").Int()
+	cost, _ := u.Cfg.Section("security").Key("hashcost").Int()
 	jsonErr := user.BindWithEmptyFields(c, cost)
 	if jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
@@ -126,14 +129,31 @@ func (u *UserController) Login(c echo.Context) error {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	claims := &models.Claims{UserID: *uid, Role: *role}
-	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), claims)
-	secret := u.Cfg.Section("jwt").Key("jwtsecret").String()
-	tokenString, err := token.SignedString([]byte(secret))
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	claims := token.Claims.(jwt.MapClaims)
+	claims["ID"] = *uid
+	claims["admin"] = (*role == models.EnumRoleAdmin)
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+	secret := u.Cfg.Section("security").Key("jwtsecret").String()
+	t, err := token.SignedString([]byte(secret))
 	if err != nil {
-		jsonErr := models.NewInternalServerError()
-		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+		return err
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"token": tokenString})
+	return c.JSON(http.StatusOK, map[string]string{
+		"token": t,
+	})
+
+	// claims := &models.Claims{UserID: *uid, Role: *role}
+	// token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), claims)
+	// secret := u.Cfg.Section("security").Key("jwtsecret").String()
+	// tokenString, err := token.SignedString([]byte(secret))
+	// if err != nil {
+	// 	jsonErr := models.NewInternalServerError()
+	// 	return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	// }
+
+	// return c.JSON(http.StatusOK, map[string]string{"token": tokenString})
 }
