@@ -78,7 +78,7 @@ func (d *DeviceController) PowerOn(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		if jsonErr := FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+		if jsonErr := FilterIDOrAdmin(c, *device.Owner); jsonErr != nil {
 			return echo.NewHTTPError(jsonErr.Status, jsonErr)
 		}
 	}
@@ -113,7 +113,7 @@ func (d *DeviceController) PowerOff(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		if jsonErr := FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+		if jsonErr := FilterIDOrAdmin(c, *device.Owner); jsonErr != nil {
 			return echo.NewHTTPError(jsonErr.Status, jsonErr)
 		}
 	}

@@ -34,7 +34,7 @@ func deleteSchema(db *pg.DB) error {
 }
 
 func createAdmin(s server) error {
-	cost, _ := s.cfg.Section("jwt").Key("hashcost").Int()
+	cost, _ := s.cfg.Section("security").Key("hashcost").Int()
 	bytes, _ := bcrypt.GenerateFromPassword([]byte("rubus_secret"), cost)
 
 	user := models.User{

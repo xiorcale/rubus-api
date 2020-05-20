@@ -10,7 +10,6 @@ import (
 // current context
 func ExtractIDFromToken(c echo.Context) int64 {
 	token := c.Get("user").(*jwt.Token)
-	c.Logger().Printf("token: ", token)
 	claims := token.Claims.(jwt.MapClaims)
 	id := claims["ID"].(float64)
 	return int64(id)
@@ -30,27 +29,19 @@ func FilterAdmin(c echo.Context) *models.JSONError {
 	return nil
 }
 
-// FilterMeOrAdmin checks if the `User` is the same as the given `uid` or and admin.
+// FilterIDOrAdmin checks if the `User` is the same as the given `uid` or and admin.
 // If not, return an Unauthorized `JSONError`.
-func FilterMeOrAdmin(c echo.Context, uid int64) *models.JSONError {
+func FilterIDOrAdmin(c echo.Context, id int64) *models.JSONError {
 	token := c.Get("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)
 	isAdmin := claims["admin"].(bool)
+	requestID := ExtractIDFromToken(c)
 
-	if claims["ID"] != uid && !isAdmin {
-		return models.NewUnauthorizedError()
-	}
+	c.Logger().Printf("request id: ", requestID)
+	c.Logger().Printf("id: ", id)
+	c.Logger().Printf("isAdmin: ", isAdmin)
 
-	return nil
-}
-
-// FilterOwnerOrAdmin checks id the `User` is the same as the given `uid`
-func FilterOwnerOrAdmin(c echo.Context, owner int64) *models.JSONError {
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(jwt.MapClaims)
-	isAdmin := claims["admin"].(bool)
-
-	if claims["ID"] != owner && !isAdmin {
+	if requestID != id || !isAdmin {
 		return models.NewUnauthorizedError()
 	}
 

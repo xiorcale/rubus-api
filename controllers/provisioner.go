@@ -37,7 +37,9 @@ func (p *ProvisionerController) Acquire(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		FilterOwnerOrAdmin(c, *device.Owner)
+		if jsonErr := FilterIDOrAdmin(c, *device.Owner); jsonErr != nil {
+			return echo.NewHTTPError(jsonErr.Status, jsonErr)
+		}
 	}
 
 	if err := models.AcquireDevice(p.DB, device, userID); err != nil {
@@ -67,7 +69,7 @@ func (p *ProvisionerController) Release(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		if jsonErr := FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+		if jsonErr := FilterIDOrAdmin(c, *device.Owner); jsonErr != nil {
 			return echo.NewHTTPError(jsonErr.Status, jsonErr)
 		}
 	}
@@ -99,7 +101,7 @@ func (p *ProvisionerController) Deploy(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		if jsonErr := FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+		if jsonErr := FilterIDOrAdmin(c, *device.Owner); jsonErr != nil {
 			return echo.NewHTTPError(jsonErr.Status, jsonErr)
 		}
 	}

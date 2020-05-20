@@ -86,14 +86,14 @@ func (u *UserController) DeleteMe(c echo.Context) error {
 // Login -
 // @description Log a `User` into the system.
 // @id login
-// @tags user
+// @tags authentication
 // @summary Log a user in
 // @accept json
 // @produce json
 // @param username query string true "The username used to login"
 // @param password query string true "The password used to login"
 // @success 200
-// @router /user/login [get]
+// @router /login [get]
 func (u *UserController) Login(c echo.Context) error {
 	username := c.QueryParam("username")
 	password := c.QueryParam("password")

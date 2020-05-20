@@ -67,5 +67,5 @@ func createRESTEndpoints(s server) {
 	adminGr.POST("/user", admin.CreateUser)
 	adminGr.GET("/user", admin.ListUser)
 	adminGr.DELETE("/user/:id", admin.DeleteUser)
-	adminGr.PUT("/user/:id", admin.UpdateUserExpiration)
+	adminGr.POST("/user/:id/expiration", admin.UpdateUserExpiration)
 }
