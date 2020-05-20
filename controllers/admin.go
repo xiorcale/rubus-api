@@ -26,7 +26,7 @@ type AdminController struct {
 // @accept json
 // @produce json
 // @security jwt
-// @param RequestBody body models.NewUser true "All the fields are required, except for the `role` which will default to `user` if not specified."
+// @param RequestBody body models.NewUser true "All the fields are required, except for the `role` which will default to `user` if not specified, and the expiration date which can be null."
 // @success 201 {object} models.User
 // @router /admin/user [post]
 func (a *AdminController) CreateUser(c echo.Context) error {
@@ -45,6 +45,28 @@ func (a *AdminController) CreateUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, user)
+}
+
+// ListUser -
+// @description Return a list containing all the `User`
+// @id listUser
+// @tags admin
+// @summary List all the users
+// @produce json
+// @security jwt
+// @success 200 {array} models.User "A JSON array listing all the users"
+// @router /admin/user [get]
+func (a *AdminController) ListUser(c echo.Context) error {
+	if jsonErr := FilterAdmin(c); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
+
+	users, jsonErr := models.GetAllUsers(a.DB)
+	if jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
+
+	return c.JSON(http.StatusOK, users)
 }
 
 // CreateDevice -

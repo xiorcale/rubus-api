@@ -17,28 +17,6 @@ type UserController struct {
 	Cfg *ini.File
 }
 
-// ListUser -
-// @description Return a list containing all the `User`
-// @id listUser
-// @tags user
-// @summary List all the users
-// @produce json
-// @security jwt
-// @success 200 {array} models.User "A JSON array listing all the users"
-// @router /user [get]
-func (u *UserController) ListUser(c echo.Context) error {
-	if jsonErr := FilterAdmin(c); jsonErr != nil {
-		return echo.NewHTTPError(jsonErr.Status, jsonErr)
-	}
-
-	users, jsonErr := models.GetAllUsers(u.DB)
-	if jsonErr != nil {
-		return echo.NewHTTPError(jsonErr.Status, jsonErr)
-	}
-
-	return c.JSON(http.StatusOK, users)
-}
-
 // GetMe -
 // @description Return the `User` who made the request
 // @id getMe
@@ -122,8 +100,9 @@ func (u *UserController) Login(c echo.Context) error {
 	username := c.QueryParam("username")
 	password := c.QueryParam("password")
 
-	uid, role, ok := models.Login(u.DB, username, password)
-	if !ok {
+	user := models.Login(u.DB, username, password)
+
+	if user == nil || (user.Expiration.Unix() > 0 && user.Expiration.Before(time.Now())) {
 		jsonErr := models.NewUnauthorizedError()
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
@@ -131,28 +110,17 @@ func (u *UserController) Login(c echo.Context) error {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
-	claims["ID"] = *uid
-	claims["admin"] = (*role == models.EnumRoleAdmin)
-	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	claims["ID"] = user.ID
+	claims["admin"] = (user.Role == models.EnumRoleAdmin)
+
+	if user.Expiration.Unix() > 0 {
+		claims["exp"] = user.Expiration.Unix()
+	}
 
 	secret := u.Cfg.Section("security").Key("jwtsecret").String()
-	t, err := token.SignedString([]byte(secret))
-	if err != nil {
-		return err
-	}
+	t, _ := token.SignedString([]byte(secret))
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"token": t,
 	})
-
-	// claims := &models.Claims{UserID: *uid, Role: *role}
-	// token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), claims)
-	// secret := u.Cfg.Section("security").Key("jwtsecret").String()
-	// tokenString, err := token.SignedString([]byte(secret))
-	// if err != nil {
-	// 	jsonErr := models.NewInternalServerError()
-	// 	return echo.NewHTTPError(jsonErr.Status, jsonErr)
-	// }
-
-	// return c.JSON(http.StatusOK, map[string]string{"token": tokenString})
 }

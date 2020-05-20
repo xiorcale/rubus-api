@@ -95,6 +95,33 @@
             }
         },
         "/admin/user": {
+            "get": {
+                "security": [
+                    {
+                        "jwt": []
+                    }
+                ],
+                "description": "Return a list containing all the `User`",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List all the users",
+                "operationId": "listUser",
+                "responses": {
+                    "200": {
+                        "description": "A JSON array listing all the users",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.User"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -115,7 +142,7 @@
                 "operationId": "createUser",
                 "parameters": [
                     {
-                        "description": "All the fields are required, except for the `role` which will default to `user` if not specified.",
+                        "description": "All the fields are required, except for the `role` which will default to `user` if not specified, and the expiration date which can be null.",
                         "name": "RequestBody",
                         "in": "body",
                         "required": true,
@@ -358,35 +385,6 @@
                 }
             }
         },
-        "/user": {
-            "get": {
-                "security": [
-                    {
-                        "jwt": []
-                    }
-                ],
-                "description": "Return a list containing all the `User`",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "List all the users",
-                "operationId": "listUser",
-                "responses": {
-                    "200": {
-                        "description": "A JSON array listing all the users",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.User"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/user/login": {
             "get": {
                 "description": "Log a `User` into the system.",
@@ -518,16 +516,24 @@
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "rubus@mail.com"
+                },
+                "expiration": {
+                    "type": "string",
+                    "example": "2020-05-18"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "rubus_secret"
                 },
                 "role": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "administrator"
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "rubus"
                 }
             }
         },
@@ -535,13 +541,16 @@
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "rubus@mail.com"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "rubus_secret"
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "rubus"
                 }
             }
         },
@@ -549,16 +558,24 @@
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "rubus@mail.com"
+                },
+                "expiration": {
+                    "type": "string",
+                    "example": "2020-05-18"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "role": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "administrator"
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "rubus"
                 }
             }
         }

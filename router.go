@@ -48,7 +48,6 @@ func createRESTEndpoints(s server) {
 	s.e.GET("/login", user.Login)
 
 	// user endpoints
-	userGr.GET("", user.ListUser)
 	userGr.GET("/me", user.GetMe)
 	userGr.PUT("/me", user.UpdateMe)
 	userGr.DELETE("/me", user.DeleteMe)
@@ -66,4 +65,5 @@ func createRESTEndpoints(s server) {
 	adminGr.POST("/device", admin.CreateDevice)
 	adminGr.DELETE("/device", admin.DeleteDevice)
 	adminGr.POST("/user", admin.CreateUser)
+	adminGr.GET("/user", admin.ListUser)
 }

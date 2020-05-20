@@ -3,6 +3,7 @@ package models
 import (
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/go-pg/pg/v9"
 	"github.com/labstack/echo/v4"
@@ -20,26 +21,28 @@ const (
 
 // User is the `User` model in the database
 type User struct {
-	ID           int64  `json:"id" pg:",pk"`
-	Username     string `json:"username" pg:",unique, notnull"`
-	Email        string `json:"email" pg:",unique, notnull"`
-	Role         Role   `json:"role"`
-	PasswordHash string `json:"-" pg:",notnull"`
+	ID           int64     `json:"id" pg:",pk" example:"1"`
+	Username     string    `json:"username" pg:",unique, notnull" example:"rubus"`
+	Email        string    `json:"email" pg:",unique, notnull" example:"rubus@mail.com"`
+	Role         Role      `json:"role" example:"administrator"`
+	Expiration   time.Time `json:"expiration" example:"2020-05-18"`
+	PasswordHash string    `json:"-" pg:",notnull"`
 }
 
 // NewUser is the model sent to create a new `User`
 type NewUser struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Role     Role   `json:"role"`
+	Username   string `json:"username" example:"rubus"`
+	Email      string `json:"email" example:"rubus@mail.com"`
+	Password   string `json:"password" example:"rubus_secret"`
+	Role       Role   `json:"role" example:"administrator"`
+	Expiration string `json:"expiration" example:"2020-05-18"`
 }
 
 // PutUser is only use to document the PUT `User` endpoint
 type PutUser struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Username string `json:"username" example:"rubus"`
+	Email    string `json:"email" example:"rubus@mail.com"`
+	Password string `json:"password" example:"rubus_secret"`
 }
 
 // Bind transforms the given payload into a `User`, with some validations
@@ -75,6 +78,17 @@ func (u *User) Bind(c echo.Context, cost int) *JSONError {
 
 	if newUser.Role != EnumRoleAdmin {
 		newUser.Role = EnumRoleUser
+	}
+
+	if len(newUser.Expiration) > 0 {
+		userExp, err := time.Parse("2006-01-02", newUser.Expiration)
+		if err != nil {
+			return &JSONError{
+				Status: http.StatusBadRequest,
+				Error:  "Expiration date is not valid.",
+			}
+		}
+		u.Expiration = userExp
 	}
 
 	bytes, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), cost)
@@ -216,19 +230,19 @@ func DeleteUser(db *pg.DB, uid int64) *JSONError {
 }
 
 // Login checks if the given credentials are valid or not
-func Login(db *pg.DB, username, password string) (*int64, *Role, bool) {
+func Login(db *pg.DB, username, password string) *User {
 	user := &User{}
 
 	if err := db.Model(user).Where("username = ?", username).Select(); err != nil {
 		if err == pg.ErrNoRows {
-			return nil, nil, false
+			return nil
 		}
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return nil, nil, false
+		return nil
 	}
 
-	return &user.ID, &user.Role, true
+	return user
 }
