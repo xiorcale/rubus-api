@@ -10,14 +10,14 @@ import (
 
 // @title Rubus API
 // @version 1.0
-// @description Rubus REST API
+// @description Rubus API exposes provisioning services to manage an edge cluster system (i.e. Raspberry pi). This API takes advantage of various HTTP features like authentication, verbs or status code. All requests and response bodies are JSON encoded, including error responses.
 // @termOfService http://swagger.io/terms/
 
 // @contact.name Quentin Vaucher
 // @contact.email quentin.vaucher3@master.hes-so.ch
 
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
 
 // @host localhost:1323
 

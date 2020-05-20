@@ -28,9 +28,9 @@ type AdminController struct {
 // @security jwt
 // @param RequestBody body models.NewUser true "All the fields are required, except for the `role` which will default to `user` if not specified."
 // @success 201 {object} models.User
-// @router /user [post]
+// @router /admin/user [post]
 func (a *AdminController) CreateUser(c echo.Context) error {
-	if jsonErr := services.FilterAdmin(c); jsonErr != nil {
+	if jsonErr := FilterAdmin(c); jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
@@ -57,9 +57,9 @@ func (a *AdminController) CreateUser(c echo.Context) error {
 // @param hostname query string true "The hostname of the device"
 // @param port query string true "The device's switch port"
 // @success 201 {object} models.Device
-// @router /device [post]
+// @router /admin/device [post]
 func (a *AdminController) CreateDevice(c echo.Context) error {
-	if jsonErr := services.FilterAdmin(c); jsonErr != nil {
+	if jsonErr := FilterAdmin(c); jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
@@ -95,9 +95,9 @@ func (a *AdminController) CreateDevice(c echo.Context) error {
 // @param hostname query string true "The hostname of the device"
 // @param deviceId query int64 true "The device's switch port"
 // @success 204
-// @router /device [delete]
+// @router /admin/device [delete]
 func (a *AdminController) DeleteDevice(c echo.Context) error {
-	if jsonErr := services.FilterAdmin(c); jsonErr != nil {
+	if jsonErr := FilterAdmin(c); jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 

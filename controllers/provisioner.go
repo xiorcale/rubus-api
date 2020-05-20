@@ -25,7 +25,7 @@ type ProvisionerController struct {
 // @security jwt
 // @param deviceId path int true "The id of the `Device` to acquire"
 // @success 200 {object} models.Device
-// @router /:deviceId/acquire [post]
+// @router /device/{deviceId}/acquire [post]
 func (p *ProvisionerController) Acquire(c echo.Context) error {
 	port, _ := strconv.Atoi(c.Param("deviceId"))
 	userID := ExtractIDFromToken(c)
@@ -37,7 +37,7 @@ func (p *ProvisionerController) Acquire(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		services.FilterOwnerOrAdmin(c, *device.Owner)
+		FilterOwnerOrAdmin(c, *device.Owner)
 	}
 
 	if err := models.AcquireDevice(p.DB, device, userID); err != nil {
@@ -56,7 +56,7 @@ func (p *ProvisionerController) Acquire(c echo.Context) error {
 // @security jwt
 // @param	deviceId		path 	int	true		"The device port to release"
 // @success 200 {object} models.Device
-// @router /:deviceId/release [post]
+// @router /device/{deviceId}/release [post]
 func (p *ProvisionerController) Release(c echo.Context) error {
 	port, _ := strconv.Atoi(c.Param("deviceId"))
 
@@ -67,7 +67,7 @@ func (p *ProvisionerController) Release(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		if jsonErr := services.FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+		if jsonErr := FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
 			return echo.NewHTTPError(jsonErr.Status, jsonErr)
 		}
 	}
@@ -88,7 +88,7 @@ func (p *ProvisionerController) Release(c echo.Context) error {
 // @security jwt
 // @param deviceId path int true "The device id to deploy"
 // @success	204
-// @router /:deviceId/deploy [post]
+// @router /device/{deviceId}/deploy [post]
 func (p *ProvisionerController) Deploy(c echo.Context) error {
 	port, _ := strconv.Atoi(c.Param("deviceId"))
 
@@ -99,7 +99,7 @@ func (p *ProvisionerController) Deploy(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		if jsonErr := services.FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+		if jsonErr := FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
 			return echo.NewHTTPError(jsonErr.Status, jsonErr)
 		}
 	}

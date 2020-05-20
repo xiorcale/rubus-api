@@ -8,7 +8,6 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/labstack/echo/v4"
 	"github.com/xiorcale/rubus-api/models"
-	"github.com/xiorcale/rubus-api/services"
 	"gopkg.in/ini.v1"
 )
 
@@ -26,9 +25,9 @@ type UserController struct {
 // @produce json
 // @security jwt
 // @success 200 {array} models.User "A JSON array listing all the users"
-// @router / [get]
+// @router /user [get]
 func (u *UserController) ListUser(c echo.Context) error {
-	if jsonErr := services.FilterAdmin(c); jsonErr != nil {
+	if jsonErr := FilterAdmin(c); jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
@@ -48,7 +47,7 @@ func (u *UserController) ListUser(c echo.Context) error {
 // @produce json
 // @security jwt
 // @success 200 {object} models.User "A JSON object describing a user"
-// @router /me [get]
+// @router /user/me [get]
 func (u *UserController) GetMe(c echo.Context) error {
 	userID := ExtractIDFromToken(c)
 
@@ -70,8 +69,8 @@ func (u *UserController) GetMe(c echo.Context) error {
 // @accept json
 // @produce json
 // @param RequestBody body models.PutUser true "the `User` fields which can be updated. Giving all the fields is not mendatory, but at least one of them is required."
-// @success 200 {object} models.User "AA JSON object describing a user"
-// @router /me [put]
+// @success 200 {object} models.User "A JSON object describing a user"
+// @router /user/me [put]
 func (u *UserController) UpdateMe(c echo.Context) error {
 	userID := ExtractIDFromToken(c)
 
@@ -97,7 +96,7 @@ func (u *UserController) UpdateMe(c echo.Context) error {
 // @summary delethe the autenticated user
 // @produce json
 // @success 200
-// @router /me [delete]
+// @router /user/me [delete]
 func (u *UserController) DeleteMe(c echo.Context) error {
 	userID := ExtractIDFromToken(c)
 
@@ -118,7 +117,7 @@ func (u *UserController) DeleteMe(c echo.Context) error {
 // @param username query string true "The username used to login"
 // @param password query string true "The password used to login"
 // @success 200
-// @router /login [get]
+// @router /user/login [get]
 func (u *UserController) Login(c echo.Context) error {
 	username := c.QueryParam("username")
 	password := c.QueryParam("password")

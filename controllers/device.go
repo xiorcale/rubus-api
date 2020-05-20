@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/labstack/echo/v4"
 	"github.com/xiorcale/rubus-api/models"
 	"github.com/xiorcale/rubus-api/services"
-	"github.com/labstack/echo/v4"
 )
 
 // DeviceController -
@@ -23,7 +23,7 @@ type DeviceController struct {
 // @produce json
 // @security jwt
 // @success 200 {array} models.Device "A JSON array listing all the devices"
-// @router / [get]
+// @router /device [get]
 func (d *DeviceController) ListDevice(c echo.Context) error {
 	devices, jsonErr := models.GetAllDevices(d.DB)
 	if jsonErr != nil {
@@ -42,7 +42,7 @@ func (d *DeviceController) ListDevice(c echo.Context) error {
 // @security jwt
 // @param deviceId path int true "The id of the `Device` to get"
 // @success 200 {object} models.Device
-// @router /:deviceId [get]
+// @router /device/{deviceId} [get]
 func (d *DeviceController) Get(c echo.Context) error {
 	deviceID, err := strconv.Atoi(c.Param("deviceId"))
 
@@ -68,7 +68,7 @@ func (d *DeviceController) Get(c echo.Context) error {
 // @security jwt
 // @param deviceId path int true "The device id to turn on"
 // @success 204
-// @router /:deviceId/on [post]
+// @router /device/{deviceId}/on [post]
 func (d *DeviceController) PowerOn(c echo.Context) error {
 	port := c.Param("deviceId")
 	deviceID, _ := strconv.Atoi(port)
@@ -78,7 +78,7 @@ func (d *DeviceController) PowerOn(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		if jsonErr := services.FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+		if jsonErr := FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
 			return echo.NewHTTPError(jsonErr.Status, jsonErr)
 		}
 	}
@@ -103,7 +103,7 @@ func (d *DeviceController) PowerOn(c echo.Context) error {
 // @security jwt
 // @param deviceId path int true "The device id to turn off"
 // @success 204
-// @router /:deviceId/off [post]
+// @router /device/{deviceId}/off [post]
 func (d *DeviceController) PowerOff(c echo.Context) error {
 	port := c.Param("deviceId")
 	deviceID, _ := strconv.Atoi(port)
@@ -113,7 +113,7 @@ func (d *DeviceController) PowerOff(c echo.Context) error {
 	}
 
 	if device.Owner != nil {
-		if jsonErr := services.FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
+		if jsonErr := FilterOwnerOrAdmin(c, *device.Owner); jsonErr != nil {
 			return echo.NewHTTPError(jsonErr.Status, jsonErr)
 		}
 	}

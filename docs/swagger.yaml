@@ -46,155 +46,17 @@ info:
   contact:
     email: quentin.vaucher3@master.hes-so.ch
     name: Quentin Vaucher
-  description: Rubus REST API
+  description: Rubus API exposes provisioning services to manage an edge cluster system
+    (i.e. Raspberry pi). This API takes advantage of various HTTP features like authentication,
+    verbs or status code. All requests and response bodies are JSON encoded, including
+    error responses.
   license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
+    name: MIT
+    url: https://opensource.org/licenses/MIT
   title: Rubus API
   version: "1.0"
 paths:
-  /:
-    get:
-      description: Return a list containing all the `User`
-      operationId: listUser
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: A JSON array listing all the users
-          schema:
-            items:
-              $ref: '#/definitions/models.User'
-            type: array
-      security:
-      - jwt: []
-      summary: List all the users
-      tags:
-      - user
-  /:deviceId:
-    get:
-      description: Return the `Device` with the given `deviceId`.
-      operationId: getDevice
-      parameters:
-      - description: The id of the `Device` to get
-        in: path
-        name: deviceId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Device'
-      security:
-      - jwt: []
-      summary: get a device by id
-      tags:
-      - device
-  /:deviceId/acquire:
-    post:
-      description: Set the `User` who made the request as the owner of the `Device`.
-      operationId: acquire
-      parameters:
-      - description: The id of the `Device` to acquire
-        in: path
-        name: deviceId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Device'
-      security:
-      - jwt: []
-      summary: acquire a device
-      tags:
-      - device
-  /:deviceId/deploy:
-    post:
-      description: Configure the PXE boot for the `Device` and reboot it.
-      operationId: deploy
-      parameters:
-      - description: The device id to deploy
-        in: path
-        name: deviceId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204": {}
-      security:
-      - jwt: []
-      summary: deploy a device
-      tags:
-      - device
-  /:deviceId/off:
-    post:
-      description: Shuts down the `Device` on the given `port`
-      operationId: powerOff
-      parameters:
-      - description: The device id to turn off
-        in: path
-        name: deviceId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204": {}
-      security:
-      - jwt: []
-      summary: Shut down a device
-      tags:
-      - device
-  /:deviceId/on:
-    post:
-      description: Boot the `Device` with the given `deviceId`.
-      operationId: powerOn
-      parameters:
-      - description: The device id to turn on
-        in: path
-        name: deviceId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "204": {}
-      security:
-      - jwt: []
-      summary: Boot a device
-      tags:
-      - device
-  /:deviceId/release:
-    post:
-      description: Remove the `Device`'s ownership from the `User` who made the request.
-      operationId: release
-      parameters:
-      - description: The device port to release
-        in: path
-        name: deviceId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Device'
-      security:
-      - jwt: []
-      summary: release a device
-      tags:
-      - device
-  /device:
+  /admin/device:
     delete:
       description: Delete a `Device` from the database and remove its directory structure
         used for deployment.
@@ -247,7 +109,192 @@ paths:
       - jwt: []
       tags:
       - admin
-  /login:
+  /admin/user:
+    post:
+      consumes:
+      - application/json
+      description: Create a new Rubus `User` and save it into the database.
+      operationId: createUser
+      parameters:
+      - description: All the fields are required, except for the `role` which will
+          default to `user` if not specified.
+        in: body
+        name: RequestBody
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+      security:
+      - jwt: []
+      summary: Create a new user
+      tags:
+      - admin
+  /device:
+    get:
+      description: List all the `Device`
+      operationId: listDevice
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A JSON array listing all the devices
+          schema:
+            items:
+              $ref: '#/definitions/models.Device'
+            type: array
+      security:
+      - jwt: []
+      summary: list all the devices
+      tags:
+      - device
+  /device/{deviceId}:
+    get:
+      description: Return the `Device` with the given `deviceId`.
+      operationId: getDevice
+      parameters:
+      - description: The id of the `Device` to get
+        in: path
+        name: deviceId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Device'
+      security:
+      - jwt: []
+      summary: get a device by id
+      tags:
+      - device
+  /device/{deviceId}/acquire:
+    post:
+      description: Set the `User` who made the request as the owner of the `Device`.
+      operationId: acquire
+      parameters:
+      - description: The id of the `Device` to acquire
+        in: path
+        name: deviceId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Device'
+      security:
+      - jwt: []
+      summary: acquire a device
+      tags:
+      - device
+  /device/{deviceId}/deploy:
+    post:
+      description: Configure the PXE boot for the `Device` and reboot it.
+      operationId: deploy
+      parameters:
+      - description: The device id to deploy
+        in: path
+        name: deviceId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204": {}
+      security:
+      - jwt: []
+      summary: deploy a device
+      tags:
+      - device
+  /device/{deviceId}/off:
+    post:
+      description: Shuts down the `Device` on the given `port`
+      operationId: powerOff
+      parameters:
+      - description: The device id to turn off
+        in: path
+        name: deviceId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204": {}
+      security:
+      - jwt: []
+      summary: Shut down a device
+      tags:
+      - device
+  /device/{deviceId}/on:
+    post:
+      description: Boot the `Device` with the given `deviceId`.
+      operationId: powerOn
+      parameters:
+      - description: The device id to turn on
+        in: path
+        name: deviceId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204": {}
+      security:
+      - jwt: []
+      summary: Boot a device
+      tags:
+      - device
+  /device/{deviceId}/release:
+    post:
+      description: Remove the `Device`'s ownership from the `User` who made the request.
+      operationId: release
+      parameters:
+      - description: The device port to release
+        in: path
+        name: deviceId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Device'
+      security:
+      - jwt: []
+      summary: release a device
+      tags:
+      - device
+  /user:
+    get:
+      description: Return a list containing all the `User`
+      operationId: listUser
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A JSON array listing all the users
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+      security:
+      - jwt: []
+      summary: List all the users
+      tags:
+      - user
+  /user/login:
     get:
       consumes:
       - application/json
@@ -271,7 +318,7 @@ paths:
       summary: Log a user in
       tags:
       - user
-  /me:
+  /user/me:
     delete:
       description: Delete the `User` who made the request.
       operationId: deleteMe
@@ -314,38 +361,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: AA JSON object describing a user
+          description: A JSON object describing a user
           schema:
             $ref: '#/definitions/models.User'
       summary: update the authenticated user
       tags:
       - user
-  /user:
-    post:
-      consumes:
-      - application/json
-      description: Create a new Rubus `User` and save it into the database.
-      operationId: createUser
-      parameters:
-      - description: All the fields are required, except for the `role` which will
-          default to `user` if not specified.
-        in: body
-        name: RequestBody
-        required: true
-        schema:
-          $ref: '#/definitions/models.NewUser'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.User'
-      security:
-      - jwt: []
-      summary: Create a new user
-      tags:
-      - admin
 securityDefinitions:
   jwt:
     in: header
