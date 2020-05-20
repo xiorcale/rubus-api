@@ -27,11 +27,9 @@ type UserController struct {
 // @success 200 {object} models.User "A JSON object describing a user"
 // @router /user/me [get]
 func (u *UserController) GetMe(c echo.Context) error {
-	userID := ExtractIDFromToken(c)
+	id := ExtractIDFromToken(c)
 
-	c.Logger().Printf("user id: ", userID)
-
-	user, jsonErr := models.GetUser(u.DB, userID)
+	user, jsonErr := models.GetUser(u.DB, id)
 	if jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
@@ -50,7 +48,7 @@ func (u *UserController) GetMe(c echo.Context) error {
 // @success 200 {object} models.User "A JSON object describing a user"
 // @router /user/me [put]
 func (u *UserController) UpdateMe(c echo.Context) error {
-	userID := ExtractIDFromToken(c)
+	id := ExtractIDFromToken(c)
 
 	var user models.User
 	cost, _ := u.Cfg.Section("security").Key("hashcost").Int()
@@ -59,7 +57,7 @@ func (u *UserController) UpdateMe(c echo.Context) error {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	uu, jsonErr := models.UpdateUser(u.DB, userID, &user)
+	uu, jsonErr := models.UpdateUser(u.DB, id, &user)
 	if jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
@@ -76,9 +74,9 @@ func (u *UserController) UpdateMe(c echo.Context) error {
 // @success 200
 // @router /user/me [delete]
 func (u *UserController) DeleteMe(c echo.Context) error {
-	userID := ExtractIDFromToken(c)
+	id := ExtractIDFromToken(c)
 
-	if jsonErr := models.DeleteUser(u.DB, userID); jsonErr != nil {
+	if jsonErr := models.DeleteUser(u.DB, id); jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 

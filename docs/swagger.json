@@ -161,6 +161,64 @@
                 }
             }
         },
+        "/admin/user/{id}": {
+            "put": {
+                "description": "Update the `User` with the given id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update a user expiration date",
+                "operationId": "updateUser",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The id from the user to update",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The new expiration date",
+                        "name": "expiration",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {}
+                }
+            },
+            "delete": {
+                "description": "Delete the `User` with the given id",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete a user",
+                "operationId": "deleteUser",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The id from the user to delete",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {}
+                }
+            }
+        },
         "/device": {
             "get": {
                 "security": [
@@ -190,14 +248,14 @@
                 }
             }
         },
-        "/device/{deviceId}": {
+        "/device/{id}": {
             "get": {
                 "security": [
                     {
                         "jwt": []
                     }
                 ],
-                "description": "Return the `Device` with the given `deviceId`.",
+                "description": "Return the `Device` with the given `id`.",
                 "produces": [
                     "application/json"
                 ],
@@ -210,7 +268,7 @@
                     {
                         "type": "integer",
                         "description": "The id of the `Device` to get",
-                        "name": "deviceId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -225,7 +283,7 @@
                 }
             }
         },
-        "/device/{deviceId}/acquire": {
+        "/device/{id}/acquire": {
             "post": {
                 "security": [
                     {
@@ -245,7 +303,7 @@
                     {
                         "type": "integer",
                         "description": "The id of the `Device` to acquire",
-                        "name": "deviceId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -260,7 +318,7 @@
                 }
             }
         },
-        "/device/{deviceId}/deploy": {
+        "/device/{id}/deploy": {
             "post": {
                 "security": [
                     {
@@ -280,7 +338,7 @@
                     {
                         "type": "integer",
                         "description": "The device id to deploy",
-                        "name": "deviceId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -290,7 +348,7 @@
                 }
             }
         },
-        "/device/{deviceId}/off": {
+        "/device/{id}/off": {
             "post": {
                 "security": [
                     {
@@ -310,7 +368,7 @@
                     {
                         "type": "integer",
                         "description": "The device id to turn off",
-                        "name": "deviceId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -320,14 +378,14 @@
                 }
             }
         },
-        "/device/{deviceId}/on": {
+        "/device/{id}/on": {
             "post": {
                 "security": [
                     {
                         "jwt": []
                     }
                 ],
-                "description": "Boot the `Device` with the given `deviceId`.",
+                "description": "Boot the `Device` with the given `id`.",
                 "produces": [
                     "application/json"
                 ],
@@ -340,7 +398,7 @@
                     {
                         "type": "integer",
                         "description": "The device id to turn on",
-                        "name": "deviceId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -350,7 +408,7 @@
                 }
             }
         },
-        "/device/{deviceId}/release": {
+        "/device/{id}/release": {
             "post": {
                 "security": [
                     {
@@ -370,7 +428,7 @@
                     {
                         "type": "integer",
                         "description": "The device port to release",
-                        "name": "deviceId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
