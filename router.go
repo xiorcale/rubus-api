@@ -6,9 +6,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	// echoSwagger "github.com/swaggo/echo-swagger"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/xiorcale/rubus-api/controllers"
-	// _ "github.com/xiorcale/rubus-api/docs"
+	_ "github.com/xiorcale/rubus-api/docs"
 )
 
 func createRESTEndpoints(s server) {
@@ -26,7 +26,7 @@ func createRESTEndpoints(s server) {
 	s.e.Use(middleware.CORS())
 
 	// documentation
-	// s.e.GET("/swagger/*", echoSwagger.WrapHandler)
+	s.e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// controllers
 	user := controllers.UserController{DB: s.db, Cfg: s.cfg}
