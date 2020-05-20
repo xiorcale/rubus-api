@@ -8,6 +8,7 @@ require (
 	github.com/go-pg/pg/v9 v9.1.6
 	github.com/go-pg/urlstruct v0.4.0 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/segmentio/encoding v0.1.12 // indirect
 	github.com/swaggo/echo-swagger v1.0.0

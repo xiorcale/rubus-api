@@ -40,14 +40,15 @@ func createRESTEndpoints(s server) {
 	adminGr := s.e.Group("/admin")
 
 	// jwt protection
-	// secret := "secret" // s.cfg.Section("jwt").Key("jwtsecret").String()
-	// userGr.Use(middleware.JWT([]byte(secret)))
-	// deviceGr.Use(middleware.JWT([]byte(secret)))
-	// adminGr.Use(middleware.JWT([]byte(secret)))
+	secret := s.cfg.Section("security").Key("jwtsecret").String()
+	userGr.Use(middleware.JWT([]byte(secret)))
+	deviceGr.Use(middleware.JWT([]byte(secret)))
+	adminGr.Use(middleware.JWT([]byte(secret)))
+
+	s.e.GET("/login", user.Login)
 
 	// user endpoints
 	userGr.GET("", user.ListUser)
-	userGr.GET("/login", user.Login)
 	userGr.GET("/me", user.GetMe)
 	userGr.PUT("/me", user.UpdateMe)
 	userGr.DELETE("/me", user.DeleteMe)

@@ -6,13 +6,13 @@ import (
 	"strconv"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/labstack/echo/v4"
 	"github.com/xiorcale/rubus-api/models"
 	"github.com/xiorcale/rubus-api/services"
-	"github.com/labstack/echo/v4"
 	"gopkg.in/ini.v1"
 )
 
-// AdminController
+// AdminController -
 type AdminController struct {
 	DB  *pg.DB
 	Cfg *ini.File
@@ -35,7 +35,7 @@ func (a *AdminController) CreateUser(c echo.Context) error {
 	}
 
 	var user models.User
-	cost, _ := a.Cfg.Section("jwt").Key("hashcost").Int()
+	cost, _ := a.Cfg.Section("security").Key("hashcost").Int()
 	if jsonErr := user.Bind(c, cost); jsonErr != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}

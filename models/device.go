@@ -56,7 +56,8 @@ func GetDevice(db *pg.DB, deviceID int64) (*Device, *JSONError) {
 }
 
 // GetAllDevices returns all the `Device` from the database
-func GetAllDevices(db *pg.DB) (devices []*Device, jsonErr *JSONError) {
+func GetAllDevices(db *pg.DB) (*[]Device, *JSONError) {
+	devices := &[]Device{}
 	if err := db.Model(devices).Select(); err != nil {
 		return nil, NewInternalServerError()
 	}

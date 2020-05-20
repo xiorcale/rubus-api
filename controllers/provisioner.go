@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/labstack/echo/v4"
 	"github.com/xiorcale/rubus-api/models"
 	"github.com/xiorcale/rubus-api/services"
-	"github.com/labstack/echo/v4"
 )
 
 // ProvisionerController -
@@ -28,7 +28,7 @@ type ProvisionerController struct {
 // @router /:deviceId/acquire [post]
 func (p *ProvisionerController) Acquire(c echo.Context) error {
 	port, _ := strconv.Atoi(c.Param("deviceId"))
-	claims := c.Request().Context().Value("claims").(*models.Claims)
+	userID := ExtractIDFromToken(c)
 
 	// get the requested `Device`
 	device, jsonErr := models.GetDevice(p.DB, int64(port))
@@ -40,7 +40,7 @@ func (p *ProvisionerController) Acquire(c echo.Context) error {
 		services.FilterOwnerOrAdmin(c, *device.Owner)
 	}
 
-	if err := models.AcquireDevice(p.DB, device, claims.UserID); err != nil {
+	if err := models.AcquireDevice(p.DB, device, userID); err != nil {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 

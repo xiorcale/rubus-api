@@ -159,17 +159,19 @@ func GetUser(db *pg.DB, uid int64) (*User, *JSONError) {
 }
 
 // GetAllUsers returns all the `User` from the database
-func GetAllUsers(db *pg.DB) (users []*User, jsonErr *JSONError) {
+func GetAllUsers(db *pg.DB) (*[]User, *JSONError) {
+	users := &[]User{}
 	if err := db.Model(users).Select(); err != nil {
-		return nil, NewInternalServerError()
+		return nil, &JSONError{Status: 500, Error: err.Error()}
+		// return nil, NewInternalServerError()
 	}
 
 	return users, nil
 }
 
 // UpdateUser modifies the `User` with the given `uid` in the database, with some validations
-func UpdateUser(db *pg.DB, uid int64, uu *User) (u *User, jsonErr *JSONError) {
-	u, jsonErr = GetUser(db, uid)
+func UpdateUser(db *pg.DB, uid int64, uu *User) (*User, *JSONError) {
+	u, jsonErr := GetUser(db, uid)
 	if jsonErr != nil {
 		return nil, jsonErr
 	}
