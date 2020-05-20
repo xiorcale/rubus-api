@@ -13,32 +13,49 @@ definitions:
   models.NewUser:
     properties:
       email:
+        example: rubus@mail.com
+        type: string
+      expiration:
+        example: "2020-05-18"
         type: string
       password:
+        example: rubus_secret
         type: string
       role:
+        example: administrator
         type: string
       username:
+        example: rubus
         type: string
     type: object
   models.PutUser:
     properties:
       email:
+        example: rubus@mail.com
         type: string
       password:
+        example: rubus_secret
         type: string
       username:
+        example: rubus
         type: string
     type: object
   models.User:
     properties:
       email:
+        example: rubus@mail.com
+        type: string
+      expiration:
+        example: "2020-05-18"
         type: string
       id:
+        example: 1
         type: integer
       role:
+        example: administrator
         type: string
       username:
+        example: rubus
         type: string
     type: object
 host: localhost:1323
@@ -110,6 +127,23 @@ paths:
       tags:
       - admin
   /admin/user:
+    get:
+      description: Return a list containing all the `User`
+      operationId: listUser
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A JSON array listing all the users
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+      security:
+      - jwt: []
+      summary: List all the users
+      tags:
+      - admin
     post:
       consumes:
       - application/json
@@ -117,7 +151,8 @@ paths:
       operationId: createUser
       parameters:
       - description: All the fields are required, except for the `role` which will
-          default to `user` if not specified.
+          default to `user` if not specified, and the expiration date which can be
+          null.
         in: body
         name: RequestBody
         required: true
@@ -276,24 +311,6 @@ paths:
       summary: release a device
       tags:
       - device
-  /user:
-    get:
-      description: Return a list containing all the `User`
-      operationId: listUser
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: A JSON array listing all the users
-          schema:
-            items:
-              $ref: '#/definitions/models.User'
-            type: array
-      security:
-      - jwt: []
-      summary: List all the users
-      tags:
-      - user
   /user/login:
     get:
       consumes:
