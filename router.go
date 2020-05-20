@@ -54,16 +54,18 @@ func createRESTEndpoints(s server) {
 
 	// device endpoints
 	deviceGr.GET("", device.ListDevice)
-	deviceGr.GET("/:deviceId", device.Get)
-	deviceGr.POST("/:deviceId/on", device.PowerOn)
-	deviceGr.POST("/:deviceId/off", device.PowerOff)
-	deviceGr.POST("/:deviceId/acquire", provisioner.Acquire)
-	deviceGr.POST("/:deviceId/release", provisioner.Release)
-	deviceGr.POST("/:deviceId/deploy", provisioner.Deploy)
+	deviceGr.GET("/:id", device.Get)
+	deviceGr.POST("/:id/on", device.PowerOn)
+	deviceGr.POST("/:id/off", device.PowerOff)
+	deviceGr.POST("/:id/acquire", provisioner.Acquire)
+	deviceGr.POST("/:id/release", provisioner.Release)
+	deviceGr.POST("/:id/deploy", provisioner.Deploy)
 
 	// admin endpoints
 	adminGr.POST("/device", admin.CreateDevice)
 	adminGr.DELETE("/device", admin.DeleteDevice)
 	adminGr.POST("/user", admin.CreateUser)
 	adminGr.GET("/user", admin.ListUser)
+	adminGr.DELETE("/user/:id", admin.DeleteUser)
+	adminGr.PUT("/user/:id", admin.UpdateUserExpiration)
 }

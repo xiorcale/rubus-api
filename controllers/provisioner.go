@@ -23,11 +23,11 @@ type ProvisionerController struct {
 // @summary acquire a device
 // @produce json
 // @security jwt
-// @param deviceId path int true "The id of the `Device` to acquire"
+// @param id path int true "The id of the `Device` to acquire"
 // @success 200 {object} models.Device
-// @router /device/{deviceId}/acquire [post]
+// @router /device/{id}/acquire [post]
 func (p *ProvisionerController) Acquire(c echo.Context) error {
-	port, _ := strconv.Atoi(c.Param("deviceId"))
+	port, _ := strconv.Atoi(c.Param("id"))
 	userID := ExtractIDFromToken(c)
 
 	// get the requested `Device`
@@ -54,11 +54,11 @@ func (p *ProvisionerController) Acquire(c echo.Context) error {
 // @summary release a device
 // @produce json
 // @security jwt
-// @param	deviceId		path 	int	true		"The device port to release"
+// @param	id		path 	int	true		"The device port to release"
 // @success 200 {object} models.Device
-// @router /device/{deviceId}/release [post]
+// @router /device/{id}/release [post]
 func (p *ProvisionerController) Release(c echo.Context) error {
-	port, _ := strconv.Atoi(c.Param("deviceId"))
+	port, _ := strconv.Atoi(c.Param("id"))
 
 	// get the requested `Device`
 	device, jsonErr := models.GetDevice(p.DB, int64(port))
@@ -86,11 +86,11 @@ func (p *ProvisionerController) Release(c echo.Context) error {
 // @summary deploy a device
 // @produce json
 // @security jwt
-// @param deviceId path int true "The device id to deploy"
+// @param id path int true "The device id to deploy"
 // @success	204
-// @router /device/{deviceId}/deploy [post]
+// @router /device/{id}/deploy [post]
 func (p *ProvisionerController) Deploy(c echo.Context) error {
-	port, _ := strconv.Atoi(c.Param("deviceId"))
+	port, _ := strconv.Atoi(c.Param("id"))
 
 	// get the requested `Device`
 	device, jsonErr := models.GetDevice(p.DB, int64(port))

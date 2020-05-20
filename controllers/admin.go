@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strconv"
+	"time"
 
 	"github.com/go-pg/pg/v9"
 	"github.com/labstack/echo/v4"
@@ -67,6 +68,64 @@ func (a *AdminController) ListUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, users)
+}
+
+// DeleteUser -
+// @description Delete the `User` with the given id
+// @id deleteUser
+// @tags admin
+// @summary Delete a user
+// @produce json
+// @param id path int64 true "The id from the user to delete"
+// @success 200
+// @router /admin/user/{id} [delete]
+func (a *AdminController) DeleteUser(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	if jsonErr := models.DeleteUser(a.DB, int64(id)); jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// UpdateUserExpiration -
+// @description Update the `User` with the given id
+// @id updateUser
+// @tags admin
+// @summary Update a user expiration date
+// @accept json
+// @produce json
+// @param id path int64 true "The id from the user to update"
+// @param expiration query string true "The new expiration date"
+// @success 200
+// @router /admin/user/{id} [put]
+func (a *AdminController) UpdateUserExpiration(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+	expriration := c.QueryParam("expiration")
+
+	user, jsonErr := models.GetUser(a.DB, int64(id))
+	if jsonErr != nil {
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
+
+	exp, err := time.Parse("2006-01-02", expriration)
+	if err != nil {
+		jsonErr := models.JSONError{
+			Status: http.StatusBadRequest,
+			Error:  "Expiration date is not valid.",
+		}
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
+
+	user.Expiration = exp
+
+	if err := a.DB.Update(user); err != nil {
+		jsonErr := models.NewInternalServerError()
+		return echo.NewHTTPError(jsonErr.Status, jsonErr)
+	}
+
+	return c.JSON(http.StatusOK, user)
 }
 
 // CreateDevice -

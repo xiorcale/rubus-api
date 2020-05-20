@@ -170,6 +170,46 @@ paths:
       summary: Create a new user
       tags:
       - admin
+  /admin/user/{id}:
+    delete:
+      description: Delete the `User` with the given id
+      operationId: deleteUser
+      parameters:
+      - description: The id from the user to delete
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      summary: Delete a user
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      description: Update the `User` with the given id
+      operationId: updateUser
+      parameters:
+      - description: The id from the user to update
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The new expiration date
+        in: query
+        name: expiration
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      summary: Update a user expiration date
+      tags:
+      - admin
   /device:
     get:
       description: List all the `Device`
@@ -188,14 +228,14 @@ paths:
       summary: list all the devices
       tags:
       - device
-  /device/{deviceId}:
+  /device/{id}:
     get:
-      description: Return the `Device` with the given `deviceId`.
+      description: Return the `Device` with the given `id`.
       operationId: getDevice
       parameters:
       - description: The id of the `Device` to get
         in: path
-        name: deviceId
+        name: id
         required: true
         type: integer
       produces:
@@ -210,14 +250,14 @@ paths:
       summary: get a device by id
       tags:
       - device
-  /device/{deviceId}/acquire:
+  /device/{id}/acquire:
     post:
       description: Set the `User` who made the request as the owner of the `Device`.
       operationId: acquire
       parameters:
       - description: The id of the `Device` to acquire
         in: path
-        name: deviceId
+        name: id
         required: true
         type: integer
       produces:
@@ -232,14 +272,14 @@ paths:
       summary: acquire a device
       tags:
       - device
-  /device/{deviceId}/deploy:
+  /device/{id}/deploy:
     post:
       description: Configure the PXE boot for the `Device` and reboot it.
       operationId: deploy
       parameters:
       - description: The device id to deploy
         in: path
-        name: deviceId
+        name: id
         required: true
         type: integer
       produces:
@@ -251,14 +291,14 @@ paths:
       summary: deploy a device
       tags:
       - device
-  /device/{deviceId}/off:
+  /device/{id}/off:
     post:
       description: Shuts down the `Device` on the given `port`
       operationId: powerOff
       parameters:
       - description: The device id to turn off
         in: path
-        name: deviceId
+        name: id
         required: true
         type: integer
       produces:
@@ -270,14 +310,14 @@ paths:
       summary: Shut down a device
       tags:
       - device
-  /device/{deviceId}/on:
+  /device/{id}/on:
     post:
-      description: Boot the `Device` with the given `deviceId`.
+      description: Boot the `Device` with the given `id`.
       operationId: powerOn
       parameters:
       - description: The device id to turn on
         in: path
-        name: deviceId
+        name: id
         required: true
         type: integer
       produces:
@@ -289,14 +329,14 @@ paths:
       summary: Boot a device
       tags:
       - device
-  /device/{deviceId}/release:
+  /device/{id}/release:
     post:
       description: Remove the `Device`'s ownership from the `User` who made the request.
       operationId: release
       parameters:
       - description: The device port to release
         in: path
-        name: deviceId
+        name: id
         required: true
         type: integer
       produces:
