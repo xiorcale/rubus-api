@@ -54,12 +54,12 @@ END
 
 poe-filter()
 {
-	poe-describe "$1" | tail -n +2 | grep 0/ | cut -d / -f 2 | tr -s ' ' | cut -d ' ' -f -1,3- | tr -d '\r'
+    poe-describe "$1" | tail -n +2 | grep 0/ | cut -d / -f 2 | tr -s ' ' | cut -d ' ' -f -1,3- | tr -d '\r'
 }
 
 poe-csv()
 {
-	# $3$4 is in case the hostname is written in two words. Can we do better ?
+    # $3$4 is in case the hostname is written in two words. Can we do better ?
     awk '{ print $1","$2","$3" "$4 }'
 }
 
@@ -77,26 +77,26 @@ ACTION=""
 DEVICE_ID=""
 RESPONSE=""
 
-router() 
+router()
 {
     while test $# -gt 0; do
         case "$1" in
         device) # /device
-            if test "$METHOD" == "GET"; then 
-                ACTION="poe-filter | poe-csv"; 
+            if test "$METHOD" == "GET"; then
+                ACTION="poe-filter | poe-csv";
             fi
             shift
             ;;
         ''|*[0-9]*) # /device/:id
             DEVICE_ID=$1
-            if test "$METHOD" == "GET"; then 
+            if test "$METHOD" == "GET"; then
                 ACTION="poe-filter 0/${1} | poe-csv"
             fi
             shift
             ;;
         on) # /device/:id/on
             ACTION=""
-            if test "$METHOD" == "POST"; then 
+            if test "$METHOD" == "POST"; then
                 ACTION="poe-set 0/${DEVICE_ID} auto; echo this,is,OK"
             fi
             break
@@ -131,7 +131,7 @@ to-json()
     # format each line as a JSON object
     while test $# -gt 0; do
         IFS=',' read -ra line_arr <<< "$1"
-        
+
         # filter broken ports
         id=${line_arr[0]}
         if [[ "$id" == "Broken" ]]; then
@@ -197,5 +197,5 @@ do
         RESPONSE=$(to-json $RESPONSE)
         echo -e "$(cat header)\n\n$RESPONSE" > response
     fi
-    ) 
+    )
 done

@@ -549,7 +549,7 @@
                 "summary": "delethe the autenticated user",
                 "operationId": "deleteMe",
                 "responses": {
-                    "200": {}
+                    "204": {}
                 }
             }
         }
