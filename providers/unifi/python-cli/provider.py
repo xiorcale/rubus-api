@@ -16,7 +16,7 @@ class Device:
 
 @app.route('/device', methods=['GET'])
 def get_all_devices():
-    '''Retruns the list of devices available for Rubus to provision.'''
+    '''Return the list of devices available for Rubus to provision.'''
     with Popen(['./poe.sh', '-c'], stdout=PIPE) as p:
         devices = []
         for line in p.stdout:
@@ -33,7 +33,7 @@ def get_all_devices():
 
 @app.route('/device/<int:id>', methods=['GET'])
 def get_device(id: int):
-    '''Returns a single device information.'''
+    '''Return a single device information.'''
     with Popen(['./poe.sh', '-c', '-p', str(id)], stdout=PIPE) as p:
         output, _ = p.communicate()
         device_raw = str(output, 'utf-8').split(' ')
@@ -49,7 +49,7 @@ def get_device(id: int):
 
 @app.route('/device/<int:id>/on', methods=['POST'])
 def power_on(id: int):
-    '''Turns on the given device.'''
+    '''Turn on the given device.'''
     with Popen(['./poe.sh', '-u', '-p', str(id)], stdout=PIPE) as p:
         p.communicate()
 
@@ -58,7 +58,7 @@ def power_on(id: int):
 
 @app.route('/device/<int:id>/off', methods=['POST'])
 def power_off(id: int):
-    '''Turns off the given device.'''
+    '''Turn off the given device.'''
     with Popen(['./poe.sh', '-d', '-p', str(id)], stdout=PIPE) as p:
         p.communicate()
 
