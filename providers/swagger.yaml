@@ -1,0 +1,111 @@
+openapi: 3.0.0
+# Added by API Auto Mocking Plugin
+servers:
+  - description: Rubus Provider API Specification
+    url: https://rubus_provider:1080
+info:
+  description: The Rubus Provider API Specification documents what a provider implementation should exposes in order to be used by Rubus API. Make sure to expose it on the port 1080.
+  version: "1.0.0"
+  title: Rubus Provider API specification
+  contact:
+    email: quentin.vaucher3@master.hes-so.ch
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+tags:
+  - name: device
+    description: Operation about devices which requires vendor specific logic
+paths:
+  /device:
+    get:
+      tags:
+        - device
+      summary: list devices
+      operationId: listDevices
+      description: |
+        Return the list of devices available for Rubus to provision. Each device which is returned by this endpoint will be added to the Rubus API. Note that deployment will be offers to user, allowing them to wipe of entirely each of these devices.
+      responses:
+        '200':
+          description: list of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+  /device/{id}:
+    get:
+      tags:
+      - device
+      summary: get device by id
+      operationId: getDevice
+      description: |
+        Return a single device information.
+      parameters:
+      - description: the device's id
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: device
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/Device'
+  /device/{id}/on:
+    post:
+      tags:
+      - device
+      summary: turn on the given device
+      operationId: turnDeviceOn
+      description: |
+        Turn on the device with the given id.
+      parameters:
+      - description: the device's id
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: no content
+  /device/{id}/off:
+    post:
+      tags:
+      - device
+      summary: turn off the given device
+      operationId: turnDeviceOff
+      description: |
+        Turn off the device with the given id.
+      parameters:
+      - description: the device's id
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: no content
+
+components:
+  schemas:
+    Device:
+      type: object
+      required:
+        - id
+        - isTurnOn
+        - hostname
+      properties:
+        id:
+          type: integer
+          example: 11
+        isTurnOn:
+          type: boolean
+        hostname:
+          type: string
+          example: 'chasseral-1'
