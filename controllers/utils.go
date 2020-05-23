@@ -11,7 +11,7 @@ import (
 func ExtractIDFromToken(c echo.Context) int64 {
 	token := c.Get("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)
-	id := claims["ID"].(float64)
+	id := claims["sub"].(float64)
 	return int64(id)
 }
 

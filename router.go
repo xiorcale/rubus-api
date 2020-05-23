@@ -29,6 +29,7 @@ func createRESTEndpoints(s server) {
 	s.e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// controllers
+    authentication := controllers.AuthenticationController{DB: s.db, Cfg: s.cfg}
 	user := controllers.UserController{DB: s.db, Cfg: s.cfg}
 	device := controllers.DeviceController{DB: s.db}
 	provisioner := controllers.ProvisionerController{DB: s.db}
@@ -45,7 +46,7 @@ func createRESTEndpoints(s server) {
 	deviceGr.Use(middleware.JWT([]byte(secret)))
 	adminGr.Use(middleware.JWT([]byte(secret)))
 
-	s.e.GET("/login", user.Login)
+	s.e.GET("/login", authentication.Login)
 
 	// user endpoints
 	userGr.GET("/me", user.GetMe)
