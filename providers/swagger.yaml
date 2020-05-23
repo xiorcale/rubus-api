@@ -4,7 +4,7 @@ servers:
   - description: Rubus Provider API Specification
     url: https://rubus_provider:1080
 info:
-  description: The Rubus Provider API Specification documents what a provider implementation should exposes in order to be used by Rubus API. Make sure to expose it on the port 1080.
+  description: The Rubus Provider API Specification documents what a provider implementation should expose in order to be used by Rubus API. Make sure to expose it on the port 1080.
   version: "1.0.0"
   title: Rubus Provider API specification
   contact:
@@ -23,7 +23,7 @@ paths:
       summary: list devices
       operationId: listDevices
       description: |
-        Return the list of devices available for Rubus to provision. Each device which is returned by this endpoint will be added to the Rubus API. Note that deployment will be offers to user, allowing them to wipe of entirely each of these devices.
+        Return the list of devices available for Rubus to provision. Each device which is returned by this endpoint will be added to the Rubus API. Note that deployment will be offered to user, allowing them to wipe of entirely each of these devices.
       responses:
         '200':
           description: list of devices
