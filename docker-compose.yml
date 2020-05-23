@@ -34,7 +34,7 @@ services:
             - rubus_network
 
     rubus_provider:
-        build: ./providers/unifi/python-cli
+        build: ./providers/unifi/bash-cli
         expose:
             - 1080
         extra_hosts:

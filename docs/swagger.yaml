@@ -383,7 +383,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200": {}
+        "204": {}
       summary: delethe the autenticated user
       tags:
       - user
