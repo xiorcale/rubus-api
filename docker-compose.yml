@@ -12,7 +12,7 @@ services:
             - 1323:1323
         privileged: true # needed to mount the overlay (can we do better?)
         volumes:
-            - .:/code  # workspace is needed for development only
+            - .:/code  # workspace is needed for development only, a custom golang image should be built for production...
             - /tftp:/tftp
             - /pxe:/pxe
             - /etc/exports:/etc/exports

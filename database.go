@@ -34,12 +34,17 @@ func deleteSchema(db *pg.DB) error {
 }
 
 func createAdmin(s server) error {
+	dbCfg := s.cfg.Section("database")
+	admin := dbCfg.Key("admin_username").String()
+	email := dbCfg.Key("admin_email").String()
+	password := dbCfg.Key("admin_password").String()
+
 	cost, _ := s.cfg.Section("security").Key("hashcost").Int()
-	bytes, _ := bcrypt.GenerateFromPassword([]byte("rubus_secret"), cost)
+	bytes, _ := bcrypt.GenerateFromPassword([]byte(password), cost)
 
 	user := models.User{
-		Username:     "admin",
-		Email:        "admin@mail.com",
+		Username:     admin,
+		Email:        email,
 		PasswordHash: string(bytes),
 		Role:         models.EnumRoleAdmin,
 	}

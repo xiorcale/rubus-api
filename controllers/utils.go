@@ -37,11 +37,7 @@ func FilterIDOrAdmin(c echo.Context, id int64) *models.JSONError {
 	isAdmin := claims["admin"].(bool)
 	requestID := ExtractIDFromToken(c)
 
-	c.Logger().Printf("request id: ", requestID)
-	c.Logger().Printf("id: ", id)
-	c.Logger().Printf("isAdmin: ", isAdmin)
-
-	if requestID != id || !isAdmin {
+	if requestID != id && !isAdmin {
 		return models.NewUnauthorizedError()
 	}
 
