@@ -5,7 +5,7 @@ definitions:
         type: string
       id:
         type: integer
-      isTurnOn:
+      isTurnedOn:
         type: boolean
       owner:
         type: integer

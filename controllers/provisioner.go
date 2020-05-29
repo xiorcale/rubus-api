@@ -110,7 +110,7 @@ func (p *ProvisionerController) Deploy(c echo.Context) error {
 	cmd := exec.Command("./scripts/deploy-device.sh", device.Hostname)
 	go cmd.Run()
 
-	if device.IsTurnOn {
+	if device.IsTurnedOn {
 		jsonErr := services.PowerDeviceOff(strconv.FormatInt(int64(port), 10))
 		if jsonErr != nil {
 			return echo.NewHTTPError(jsonErr.Status, jsonErr)

@@ -147,12 +147,12 @@ to-json()
         fi
 
         if [[ "${line_arr[1]}" == "Up" ]]; then
-            isTurnOn="true"
+            isTurnedOn="true"
         else
-            isTurnOn="false"
+            isTurnedOn="false"
         fi
 
-        obj="{ \"id\": $id, \"isTurnOn\": $isTurnOn, \"hostname\": \"$hostname\" },\n"
+        obj="{ \"id\": $id, \"isTurnedOn\": $isTurnedOn, \"hostname\": \"$hostname\" },\n"
         json=$json$obj
         shift
     done

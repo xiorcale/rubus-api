@@ -10,7 +10,7 @@ app = Flask(__name__)
 class Device:
     '''Device is compliant to the description of a Rubus Device.'''
     id: int
-    isTurnOn: int
+    isTurnedOn: int
     hostname: str
 
 

@@ -564,7 +564,7 @@
                 "id": {
                     "type": "integer"
                 },
-                "isTurnOn": {
+                "isTurnedOn": {
                     "type": "boolean"
                 },
                 "owner": {
