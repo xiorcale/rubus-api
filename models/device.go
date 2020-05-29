@@ -8,10 +8,10 @@ import (
 
 // Device contains the information about a device
 type Device struct {
-	ID       int64  `json:"id" pg:",pk"`
-	Hostname string `json:"hostname"`
-	IsTurnOn bool   `json:"isTurnOn"`
-	Owner    *int64 `json:"owner" orm:"null"`
+	ID         int64  `json:"id" pg:",pk"`
+	Hostname   string `json:"hostname"`
+	IsTurnedOn bool   `json:"isTurnedOn"`
+	Owner      *int64 `json:"owner" orm:"null"`
 }
 
 // AddDevice inserts a new `Device` into the database
@@ -81,10 +81,10 @@ func DeleteDevice(db *pg.DB, uid int64) *JSONError {
 	return nil
 }
 
-// SwitchDevicePower inverse the `isTurnOn` field of the `Device` with the given
+// SwitchDevicePower inverse the `isTurnedOn` field of the `Device` with the given
 // `deviceID`
 func SwitchDevicePower(db *pg.DB, device *Device) (*Device, *JSONError) {
-	device.IsTurnOn = !device.IsTurnOn
+	device.IsTurnedOn = !device.IsTurnedOn
 
 	if err := db.Update(device); err != nil {
 		return nil, NewInternalServerError()

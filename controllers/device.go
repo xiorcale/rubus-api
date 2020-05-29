@@ -87,7 +87,7 @@ func (d *DeviceController) PowerOn(c echo.Context) error {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	if !device.IsTurnOn {
+	if !device.IsTurnedOn {
 		models.SwitchDevicePower(d.DB, device)
 	}
 
@@ -122,7 +122,7 @@ func (d *DeviceController) PowerOff(c echo.Context) error {
 		return echo.NewHTTPError(jsonErr.Status, jsonErr)
 	}
 
-	if device.IsTurnOn {
+	if device.IsTurnedOn {
 		models.SwitchDevicePower(d.DB, device)
 	}
 

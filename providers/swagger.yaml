@@ -98,13 +98,13 @@ components:
       type: object
       required:
         - id
-        - isTurnOn
+        - isTurnedOn
         - hostname
       properties:
         id:
           type: integer
           example: 11
-        isTurnOn:
+        isTurnedOn:
           type: boolean
         hostname:
           type: string
