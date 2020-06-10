@@ -67,7 +67,7 @@ func (u *UserController) UpdateMe(c echo.Context) error {
 // @description Delete the `User` who made the request.
 // @id deleteMe
 // @tags user
-// @summary delethe the autenticated user
+// @summary delete the autenticated user
 // @produce json
 // @success 204
 // @router /user/me [delete]
@@ -80,4 +80,3 @@ func (u *UserController) DeleteMe(c echo.Context) error {
 
 	return c.NoContent(http.StatusNoContent)
 }
-

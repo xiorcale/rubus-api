@@ -476,7 +476,12 @@
                     }
                 ],
                 "responses": {
-                    "200": {}
+                    "200": {
+                        "description": "The token to authenticate the user",
+                        "schema": {
+                            "$ref": "#/definitions/models.JWT"
+                        }
+                    }
                 }
             }
         },
@@ -546,7 +551,7 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "delethe the autenticated user",
+                "summary": "delete the autenticated user",
                 "operationId": "deleteMe",
                 "responses": {
                     "204": {}
@@ -569,6 +574,15 @@
                 },
                 "owner": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.JWT": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwic3ViIjoxfQ.ThUA0fhJMGLGtBFAALQ8zdczOzlRIJsV3UY3GKpEZH0"
                 }
             }
         },

@@ -8,3 +8,8 @@ type Claims struct {
 	UserID int64
 	Role   Role
 }
+
+// JWT is used for swagger doc only
+type JWT struct {
+	token string `example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwic3ViIjoxfQ.ThUA0fhJMGLGtBFAALQ8zdczOzlRIJsV3UY3GKpEZH0"`
+}
