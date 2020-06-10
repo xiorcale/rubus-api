@@ -10,6 +10,12 @@ definitions:
       owner:
         type: integer
     type: object
+  models.JWT:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwic3ViIjoxfQ.ThUA0fhJMGLGtBFAALQ8zdczOzlRIJsV3UY3GKpEZH0
+        type: string
+    type: object
   models.NewUser:
     properties:
       email:
@@ -372,7 +378,10 @@ paths:
       produces:
       - application/json
       responses:
-        "200": {}
+        "200":
+          description: The token to authenticate the user
+          schema:
+            $ref: '#/definitions/models.JWT'
       summary: Log a user in
       tags:
       - authentication
@@ -384,7 +393,7 @@ paths:
       - application/json
       responses:
         "204": {}
-      summary: delethe the autenticated user
+      summary: delete the autenticated user
       tags:
       - user
     get:

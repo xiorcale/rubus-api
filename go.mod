@@ -18,7 +18,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/net v0.0.0-20200519113804-d87ec0cfa476 // indirect
 	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
-	golang.org/x/tools v0.0.0-20200528185414-6be401e3f76e // indirect
+	golang.org/x/tools v0.0.0-20200610052024-8d7dbee4c8ae // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/ini.v1 v1.56.0
 )
